@@ -39,3 +39,6 @@ Thumbs.db
 # Other files #
 ###############
 .vagrant/*
+HElib/
+docs/
+qrs
