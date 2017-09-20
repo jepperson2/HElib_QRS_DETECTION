@@ -1,0 +1,63 @@
+mkdir -p objects
+g++ -std=c++11 -c src/he.cpp -I HElib/src -o objects/he.o
+src/he.cpp:795:1: warning: control may reach end of non-void function [-Wreturn-type]
+}
+^
+1 warning generated.
+g++ -std=c++11 -c src/helper_functions.cpp -o objects/helper_functions.o
+g++ -std=c++11 -c src/TEST_GATES.cpp -I HElib/src -o objects/test_gates.o
+g++ -std=c++11 -c src/TEST_CIRC_COMB.cpp -I HElib/src -o objects/test_circ_comb.o
+g++ -std=c++11 -c src/TEST_CIRC_SEQ.cpp -I HElib/src -o objects/test_circ_seq.o
+g++ -std=c++11 -c src/TEST_CIRC_ARITHM.cpp -I HElib/src -o objects/test_circ_arithm.o
+g++ -std=c++11 -c src/main.cpp -I HElib/src -o objects/main.o
+
+Compiling hbc...
+g++ -std=c++11 objects/*.o HElib/src/fhe.a -o hbc -L/usr/local/lib -lntl -lgmp -lm
+ld: warning: ignoring file HElib/src/fhe.a, file was built for archive which is not the architecture being linked (x86_64): HElib/src/fhe.a
+Undefined symbols for architecture x86_64:
+  "buildModChain(FHEcontext&, long, long, long)", referenced from:
+      HE::keyGen(key_params) in he.o
+  "makeIrredPoly(long, long)", referenced from:
+      HE::keyGen(key_params) in he.o
+  "addSome1DMatrices(FHESecKey&, long, long)", referenced from:
+      HE::keyGen(key_params) in he.o
+  "buildEncryptedArray(FHEcontext const&, NTL::ZZX const&, PAlgebraMod const&)", referenced from:
+      EncryptedArray::EncryptedArray(FHEcontext const&, NTL::ZZX const&) in he.o
+  "FindM(long, long, long, long, long, long, long, bool)", referenced from:
+      TEST_CIRC_ARITHM::test_MULTIPLY() in test_circ_arithm.o
+      TEST_CIRC_ARITHM::test_FAVERAGES() in test_circ_arithm.o
+      TEST_CIRC_ARITHM::test_DIVIDE() in test_circ_arithm.o
+      TEST_CIRC_ARITHM::test_AVERAGES() in test_circ_arithm.o
+      TEST_CIRC_COMB::set_params() in test_circ_comb.o
+      TEST_CIRC_SEQ::set_params() in test_circ_seq.o
+      TEST_GATES::set_params() in test_gates.o
+      ...
+  "sampleHWt(NTL::ZZX&, long, long)", referenced from:
+      DoubleCRT::sampleHWt(long) in he.o
+  "FHEcontext::FHEcontext(unsigned long, unsigned long, unsigned long, std::__1::vector<long, std::__1::allocator<long> > const&, std::__1::vector<long, std::__1::allocator<long> > const&)", referenced from:
+      HE::keyGen(key_params) in he.o
+  "Ctxt::multiplyBy(Ctxt const&)", referenced from:
+      HE::mul(std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char> >, std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char> >) in he.o
+  "Ctxt::multiplyBy2(Ctxt const&, Ctxt const&)", referenced from:
+      HE::mul(std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char> >, std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char> >, std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char> >) in he.o
+  "Ctxt::privateAssign(Ctxt const&)", referenced from:
+      Ctxt::operator=(Ctxt const&) in he.o
+  "Ctxt::negate()", referenced from:
+      HE::neg(std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char> >) in he.o
+  "Ctxt::addCtxt(Ctxt const&, bool)", referenced from:
+      Ctxt::operator+=(Ctxt const&) in he.o
+      Ctxt::operator-=(Ctxt const&) in he.o
+  "Ctxt::Ctxt(FHEPubKey const&, long)", referenced from:
+      HE::encrypt(std::__1::vector<long, std::__1::allocator<long> >) in he.o
+      FHEPubKey::FHEPubKey(FHEcontext const&) in he.o
+  "DoubleCRT::DoubleCRT(FHEcontext const&)", referenced from:
+      FHESecKey::GenSecKey(long, long, long) in he.o
+  "DoubleCRT::operator=(NTL::ZZX const&)", referenced from:
+      DoubleCRT::sampleHWt(long) in he.o
+  "FHESecKey::ImportSecKey(DoubleCRT const&, long, long, long)", referenced from:
+      FHESecKey::GenSecKey(long, long, long) in he.o
+  "Ctxt::equalsTo(Ctxt const&, bool) const", referenced from:
+      HE::eq(std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char> >, std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char> >) in he.o
+ld: symbol(s) not found for architecture x86_64
+clang: error: linker command failed with exit code 1 (use -v to see invocation)
+make: *** [hbc] Error 1

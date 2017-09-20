@@ -1,0 +1,175 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configurationDescriptor version="100">
+  <logicalFolder name="root" displayName="root" projectFiles="true" kind="ROOT">
+    <df root="." name="0">
+      <df name=".vagrant">
+        <df name="machines">
+          <df name="default">
+            <df name="virtualbox">
+            </df>
+          </df>
+        </df>
+      </df>
+      <df name="docs">
+      </df>
+      <df name="HElib">
+        <df name="doc">
+          <df name="designDocument">
+          </df>
+        </df>
+        <df name="src">
+          <df name="aes">
+            <in>Test_AES.cpp</in>
+            <in>homAES.cpp</in>
+            <in>homAES.h</in>
+            <in>simpleAES.cpp</in>
+          </df>
+          <df name="misc">
+            <in>SPX.h</in>
+            <in>Test_SPX.cpp</in>
+          </df>
+          <in>BenesNetwork.cpp</in>
+          <in>CModulus.cpp</in>
+          <in>CModulus.h</in>
+          <in>Ctxt.cpp</in>
+          <in>Ctxt.h</in>
+          <in>DoubleCRT.cpp</in>
+          <in>DoubleCRT.h</in>
+          <in>EncryptedArray.cpp</in>
+          <in>EncryptedArray.h</in>
+          <in>EvalMap.cpp</in>
+          <in>EvalMap.h</in>
+          <in>FHE.cpp</in>
+          <in>FHE.h</in>
+          <in>FHEContext.cpp</in>
+          <in>FHEContext.h</in>
+          <in>IndexMap.h</in>
+          <in>IndexSet.cpp</in>
+          <in>IndexSet.h</in>
+          <in>KeySwitching.cpp</in>
+          <in>MulTime.cpp</in>
+          <in>NumbTh.cpp</in>
+          <in>NumbTh.h</in>
+          <in>OptimizePermutations.cpp</in>
+          <in>PAlgebra.cpp</in>
+          <in>PAlgebra.h</in>
+          <in>PermNetwork.cpp</in>
+          <in>Test_EvalMap.cpp</in>
+          <in>Test_General.cpp</in>
+          <in>Test_IO.cpp</in>
+          <in>Test_LinPoly.cpp</in>
+          <in>Test_OldEvalMap.cpp</in>
+          <in>Test_PAlgebra.cpp</in>
+          <in>Test_Permutations.cpp</in>
+          <in>Test_PolyEval.cpp</in>
+          <in>Test_Powerful.cpp</in>
+          <in>Test_Replicate.cpp</in>
+          <in>Test_Timing.cpp</in>
+          <in>Test_bootstrapping.cpp</in>
+          <in>Test_extractDigits.cpp</in>
+          <in>Test_matmul.cpp</in>
+          <in>Test_matmul1D.cpp</in>
+          <in>blockMatmul.cpp</in>
+          <in>blockMatmul1D.cpp</in>
+          <in>bluestein.cpp</in>
+          <in>bluestein.h</in>
+          <in>cgauss.cpp</in>
+          <in>cloned_ptr.h</in>
+          <in>debugging.cpp</in>
+          <in>eqtesting.cpp</in>
+          <in>extractDigits.cpp</in>
+          <in>hypercube.cpp</in>
+          <in>hypercube.h</in>
+          <in>matching.cpp</in>
+          <in>matching.h</in>
+          <in>matmul.cpp</in>
+          <in>matmul.h</in>
+          <in>matmul1D.cpp</in>
+          <in>multicore.h</in>
+          <in>params.cpp</in>
+          <in>permutations.cpp</in>
+          <in>permutations.h</in>
+          <in>polyEval.cpp</in>
+          <in>polyEval.h</in>
+          <in>powerful.cpp</in>
+          <in>powerful.h</in>
+          <in>recryption.cpp</in>
+          <in>recryption.h</in>
+          <in>replicate.cpp</in>
+          <in>replicate.h</in>
+          <in>rotations.cpp</in>
+          <in>timing.cpp</in>
+          <in>timing.h</in>
+        </df>
+      </df>
+      <df name="objects">
+      </df>
+      <df name="src">
+        <in>QRS_DETECTION.cpp</in>
+        <in>QRS_DETECTION.h</in>
+        <in>TEST_CIRC_ARITHM.cpp</in>
+        <in>TEST_CIRC_ARITHM.h</in>
+        <in>TEST_CIRC_COMB.cpp</in>
+        <in>TEST_CIRC_COMB.h</in>
+        <in>TEST_CIRC_SEQ.cpp</in>
+        <in>TEST_CIRC_SEQ.h</in>
+        <in>TEST_GATES.cpp</in>
+        <in>TEST_GATES.h</in>
+        <in>he.cpp</in>
+        <in>he.h</in>
+        <in>helper_functions.cpp</in>
+        <in>helper_functions.h</in>
+        <in>main.cpp</in>
+        <in>test.cpp</in>
+      </df>
+    </df>
+  </logicalFolder>
+  <projectmakefile>makefile</projectmakefile>
+  <confs>
+    <conf name="Default" type="0">
+      <toolsSet>
+        <developmentServer>localhost</developmentServer>
+        <platform>4</platform>
+      </toolsSet>
+      <compile>
+        <compiledirpicklist>
+          <compiledirpicklistitem>.</compiledirpicklistitem>
+          <compiledirpicklistitem>${AUTO_FOLDER}</compiledirpicklistitem>
+        </compiledirpicklist>
+        <compiledir>${AUTO_FOLDER}</compiledir>
+        <compilecommandpicklist>
+          <compilecommandpicklistitem>${MAKE} ${ITEM_NAME}.o</compilecommandpicklistitem>
+          <compilecommandpicklistitem>${AUTO_COMPILE}</compilecommandpicklistitem>
+        </compilecommandpicklist>
+        <compilecommand>${AUTO_COMPILE}</compilecommand>
+      </compile>
+      <dbx_gdbdebugger version="1">
+        <gdb_pathmaps>
+        </gdb_pathmaps>
+        <gdb_interceptlist>
+          <gdbinterceptoptions gdb_all="false" gdb_unhandled="true" gdb_unexpected="true"/>
+        </gdb_interceptlist>
+        <gdb_options>
+          <DebugOptions>
+          </DebugOptions>
+        </gdb_options>
+        <gdb_buildfirst gdb_buildfirst_overriden="false" gdb_buildfirst_old="false"/>
+      </dbx_gdbdebugger>
+      <nativedebugger version="1">
+        <engine>gdb</engine>
+      </nativedebugger>
+      <runprofile version="9">
+        <runcommandpicklist>
+          <runcommandpicklistitem>"${OUTPUT_PATH}"</runcommandpicklistitem>
+        </runcommandpicklist>
+        <runcommand>"${OUTPUT_PATH}"</runcommand>
+        <rundir>.</rundir>
+        <buildfirst>false</buildfirst>
+        <terminal-type>0</terminal-type>
+        <remove-instrumentation>0</remove-instrumentation>
+        <environment>
+        </environment>
+      </runprofile>
+    </conf>
+  </confs>
+</configurationDescriptor>
