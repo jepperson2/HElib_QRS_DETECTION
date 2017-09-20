@@ -1,30 +1,29 @@
-# Homomorphic binary circuits - *hbc*
+# QRS Detection using HElib to implement Wang's Dualslope Algorithm
 
-*This project was developed as my Master final year project at Imperial College London.*
+*This project is being developed as part of my Master's thesis at the University of Malaya*
 
-*This project is still maintained (Sept 2017) by Quentin McGaw (email: quentin . mcgaw at gmail . com)*
+*Although this project is still in development, feel free to contact me at epperson . jessee at gmail . com)*
 
 
 ## 1. What is it, in *one* line?
-It is an **API** of homomorphic binary operations such as binary comparison or binary Euclidian division using the library _HElib_.
+It is an implementation of a QRS detection algorithm using fully homomorphic encryption (HElib + hbc).
 
 
 ## 2. What is in there?
 - It is written in C++ and is cross-platform with Vagrant
-- The **core API** is in *src/he.cpp*.
+- The binary circuit API (as developed by qdm12) in *src/he.cpp*.
 - The code that is ran as an **example** is in *src/main.cpp*.
 - Some other classes are in *src/helper_functions.cpp*
+- The QRS detection algorithm is implemented in *src/QRS_DETECTION.cpp*
 - All the other src files are **unit tests** and timing tests for the homomorphic binary operations implemented in *src/he.cpp*.
 - There is a **Vagrantfile** to setup eveything for you, cross-platform.
-- There is a **makefile** to build *hbc* or setup almost everything for you (depending on your OS).
+- There is a **makefile** to build *qrs* or setup almost everything for you (depending on your OS).
 - There is this complete, detailed and updated **README.md** file.
-- There are links in this readme to my **presentation** (VERY USEFUL) and my detailed report (WAY TOO LONG).
 
 
 ## 3. What does it run ?
-- It runs the code in *main.cpp* which execute the unit tests on all the homomorphic circuits implemented.
-- You can change the main.cpp with your code by inspiring from the tests.
-- You can also add circuits in *he.cpp* and then add corresponding tests, and **tell me** you want to contribute !
+- It runs the code in *main.cpp* which executes the QRS detection.
+- You can change main.cpp with your code to suit your needs/inputs.
 
 
 ## 4. What does it require ?
@@ -38,22 +37,19 @@ It is an **API** of homomorphic binary operations such as binary comparison or b
 
    | Program or Library | Requirement 1 | Requirement 2 | Requirement 3 | Requirement 4 | Requirement 5 |
    | ------------------ | ------------- | ------------- | ------------- | ------------- | ------------- |
-   | hbc                | g++           | make          | HElib         | c++11         |
+   | hqrsd		| g++		| make		| HElib		| c++11		| 		|
    | HElib              | g++           | make          | git           | libboost      | NTL 10.5.0    |
-   | NTL 10.5.0         | g++           | make          | GMP 6.1.2     |
-   | GMP 6.1.2          | g++           | make          | m4            | perl          |
+   | NTL 10.5.0         | g++           | make          | GMP 6.1.2     |		|		|
+   | GMP 6.1.2          | g++           | make          | m4            | perl          |		|
 
 
 ## 5. Documentation
 - This readme file
-- **Presentation** available on [Dropbox][dropbox_pres], on [Github][github_pres] and on [Youtube](https://www.youtube.com/watch?v=n-adgQWZYxI) where I present it.
-- Report available on [Github][github_report] or on [Dropbox][dropbox_report]
-- Comments in the source code, especially in _he.cpp_
+- Comments in the source code, especially in _QRS_DETECTION.cpp_
 
 
-## 6. Abstract ##
-This project concerns the research and development of a real-use application of homomorphic encryption for cloud computing. The application takes advantage of the various possibilities and limitations of present homomorphic encryption schemes and programming libraries to remain usable in terms of time. The foundations of the application rely on the design of binary operations using homomorphic encryption. All the binary logic gates and various binary blocks were developed and adapted to provide enough functionalities to the application. The project focuses on providing features to cloud computing such as calculating averages on large amounts of encrypted numbers in a relatively short and decent time. The result is an application program interface written in C++ allowing to perform various operations on integers. It thus shows homomorphic encryption can be used today for simple operations if the security is more important than the speed of execution. 
-
+## 6. Abstract (Draft) ##
+Cardiac arrhythmias are associated with heart diseases and are often asymptomatic. Correct detection of arrhythmias helps diagnose and treat heart diseases. The most common method of detecting arrhythmias is electrocardiogram (ECG) monitoring. Some arrhythmias, such as atrial fibrillation, are paroxysmal in nature and cannot be easily monitored in a hospital setting. Healthcare Organizations (HCOs) must be careful, however, when collecting data outside their confines, as the privacy of medical information could be compromised during the transfer, storage, or computation of said data. Secure transfer and storage of ambulatory ECG data is trivially accomplished by use of well-established encryption and transfer protocols, but privacy-preserving computation is non-trivial. Existing solutions for analysis of ECG data require either delayed analysis once apparatus is brought back to the HCO or significant infrastructure to transfer and analyze the data in a secure environment. Using public cloud computing would significantly reduce the amount of infrastructure required for an HCO to analyze ECG data, but allowing third parties unencrypted access to medical data goes against HIPAA regulations and violates patient privacy. Private clouds cannot be feasibly instantiated by small HCOs due to the high set-up and maintenance costs, though they would provide the security guarantees required for privacy-preserving computation. One privacy-preserving solution that allows public cloud servers to compute sensitive medical data is to use fully homomorphic encryption (FHE), which enables computations to be performed on encrypted data without decryption. Using FHE would allow HCOs to transfer, store, and process medical information in untrusted, public clouds while staying within the privacy guidelines of HIPAA because the cloud servers would never see the unencrypted data. This work uses HElib and an API called hbc to create an FHE-based implementation of a QRS complex detection algorithm as an example of ECG data computation.
 
 ## 7. How do I run it?
 
@@ -64,22 +60,22 @@ This project concerns the research and development of a real-use application of 
 2. On Windows, have an ssh client or add the **ssh.exe** of `C:\Program Files\Git\usr\bin` to your environment path
 2. Install Virtual Box from [virtualbox.org/wiki/Downloads](https://www.virtualbox.org/wiki/Downloads)
 3. Install Vagrant from [vagrantup.com/downloads.html](https://www.vagrantup.com/downloads.html)
-4. Open a terminal and enter `git clone https://github.com/qdm12/hbc.git`
-5. Go to the hbc directory with `cd hbc`
+4. Open a terminal and enter `git clone https://github.com/jepperson2/hqrsd.git`
+5. Go to the hqrsd directory with `cd hqrsd`
 6. Enter `vagrant up` to launch the virtual machine which will setup and build everything for you. 
 This takes about 30 minutes the first time, depending on your connection speed and CPU.
 This basically launches an Ubuntu-based virtual machine with only what is necessary for this project.
 **WARNING:** If you do not have hardware virtualization, you can still run it but you have to change *trusty64*
  to *trusty32* and *vb.cpus = 2* to *vb.cpus = 1*.
 7. Once vagrant up has completed, enter `vagrant ssh` to log in the virtual machine.
-8. The working directory *hbc* on your host machine is shared with the virtual machine at `/vagrant`.
+8. The working directory *hqrsd* on your host machine is shared with the virtual machine at `/vagrant`.
 9. In the virtual machine, enter `cd /vagrant`.
 10. What's nice then:
     - You can modify the files on your host machine (like Windows etc.)
     - Changes you make are automatically reflected in the Ubuntu-based virtual machine.
-    - Compile hbc again with `make hbc` in the virtual machine.
-    - Run hbc with ./hbc from the virtual machine or your host machine.
-    - **Note:** *You can use `make hbcNrun` to build and automatically run the main.cpp code.
+    - Compile hqrsd again with `make hqrsd` in the virtual machine.
+    - Run hqrsd with ./hqrsd from the virtual machine or your host machine.
+    - **Note:** *You can use `make hqrsdNrun` to build and automatically run the main.cpp code.
 11. When you are done:
     - Enter `exit` in the virtual machine, bringing you back to your host machine.
     - Enter `vagrant halt` to shutdown the machine. Or enter `vagrant destroy` to delete the machine.
@@ -91,7 +87,7 @@ This basically launches an Ubuntu-based virtual machine with only what is necess
 3. Setup the necessary libraries
     - With the Makefile provided (only works for **Debian** and **Ubuntu**)
         1. Note: *git, g++, m4, perl, gmp and ntl* will be installed automatically*.
-        2. Enter `make HElib` in a terminal in the *hbc* directory.
+        2. Enter `make HElib` in a terminal in the *hqrsd* directory.
     - Manually (if Vagrant and Makefile are not good for you)
         - Mac OSX
             1. Install Xcode manually or with `xcode-select --install`
@@ -166,9 +162,9 @@ This basically launches an Ubuntu-based virtual machine with only what is necess
                16. Build it with `make`
                17. *Optionally*, check it with `make check` and test it with `make test`.
                18. Go back to the working directory with `cd ../..`
-4. Build hbc
+4. Build hqrsd
     - With the Makefile provided (compatible will **all** platforms).
-        1. Build it with `make hbc`
+        1. Build it with `make hqrsd`
     - Manually
         1. Create the directory objects `mkdir -p objects`
         2. Compile the API `g++ -c src/he.cpp -I HElib/src -o objects/he.o`
@@ -178,19 +174,17 @@ This basically launches an Ubuntu-based virtual machine with only what is necess
             - `g++ -c src/TEST_CIRC_COMB.cpp -I HElib/src -o objects/test_circ_comb.o`
             - `g++ -c src/TEST_CIRC_SEQ.cpp -I HElib/src -o objects/test_circ_seq.o`
             - `g++ -c src/TEST_CIRC_ARITHM.cpp -I HElib/src -o objects/test_circ_arithm.o`
+	    - `g++ -c src/QRS_DETECTION.cpp -I HElib/src -o objects/QRS_DETECTION.o
         5. Compile the main.cpp file `g++ -c src/main.cpp -I HElib/src -o objects/main.o`
-        6. Compile the objects into *hbc* `g++ objects/*.o HElib/src/fhe.a -o hbc -L/usr/local/lib -lntl -lgmp -lm`
-5. Run hbc
-    - Run it with `./hbc` (Careful about having enough **RAM**)
-    - You can also build it and run the new build with `make hbcNrun`
+        6. Compile the objects into *hqrsd* `g++ objects/*.o HElib/src/fhe.a -o hqrsd -L/usr/local/lib -lntl -lgmp -lm`
+5. Run hqrsd
+    - Run it with `./hqrsd` (Careful about having enough **RAM**)
+    - You can also build it and run the new build with `make hqrsdNrun`
 
 	
 ## 8. RAM considerations IMPORTANT
-- To run the default hbc program, you need at least 3GB of RAM.
-- This is because the average operation (arithmetic tests) uses about 2GB of RAM for 2 bits.
-- Note that you can comment it out in the main.cpp or TEST_ARITHMETIC.cpp 
-  and stick to tests of simpler circuits such as the multiplication which 
-  only require about 0.7 - 1GB of RAM. 
+- To run the default hqrsd program, at least 3GB of RAM is recommended.
+- Note that tests of simpler circuits such as the multiplication only require about 0.7 - 1GB of RAM, while averages take ~3GB
 - For **Vagrant**, you can modify the amount of RAM in the **vb.memory** field, 
   which is set to **2600MB** by default. To monitor the RAM usage, open a new 
   host terminal, go to the working directory and use `vagrant ssh -c htop`.
@@ -198,10 +192,10 @@ This basically launches an Ubuntu-based virtual machine with only what is necess
 	  
 ## 9. CPU considerations for Vagrant
 - By default, the Vagrant VM uses 2 cores of your CPU (vb.cpus = 2) so that
-  you can run hbc and also monitor the RAM with another `vagrant ssh`.
-- You can also run more instances of hbc if you have more than two cores available.
+  you can run hqrsd and also monitor the RAM with another `vagrant ssh`.
+- You can also run more instances of hqrsd if you have more than two cores available.
   With Vagrant, just set vb.cpus to 3 for example, log in with `vagrant ssh` on different
-  host terminals and run hbc (provided you have enough RAM to run both obviously).
+  host terminals and run hqrsd (provided you have enough RAM to run both obviously).
 
 	  
 ## 10. Remove and uninstall ##
@@ -211,42 +205,16 @@ Just enter `vagrant destroy` from your host machine in the working directory.
 
 ### 10.2 Otherwise
 Use the makefile and run `make deepclean` which uninstalls and delete:
-- hbc
+- hqrsd
 - HElib, NTL, GMP
 - perl, m4, git, gcc-g++ and libboost-all-dev and purge them.
 Only the makefile will remain in the folder.
 
 
 ## 11. Acknowledgements ##
-Credits to **Shai Halevi** for HElib obviously and thanks for the quick help tips in the Issues section!
+Credits to **Shai Halevi** for developing and maintaining HElib
 
-Thanks to **Dr. Wei Dai** (Imperial College London) for introducing me to homomorphic encryption
+Thanks to **Prof. Miss Laiha** (University Malaya) for her supervision over my research
 
-Thanks to **Christian Bodt** (Coinplus) for teaching me the basics of cryptography and security, as well as useful coding skills.
+Thanks to my beloved **Amy** for her continuous love and support throughout my adventures in Southeast Asia.
 
-Thanks to **Alexandra Rouhana** for her useful discussions that helped me figure out how to overcome some design restrictions.
-
-Thanks to **Wei Dai** from the Vernam Group at Worcester Polytechnic Institute for keeping me updated with the status of CuHE. 
-
-Thanks to **my dad**, **mother** and **step-mother** for their continuous support throughout my studies.
-
-
-## 12. Contribution
-You're welcome to contribute to this repository if you find any better circuits or other circuits and implement them !
-
-Just send me an email (see my address at the start) and I will add you as a contributor.
-
-Don't hesitate to contact me if you have any question as well.
-
-
-## 13. Future Work (ideas crossing my mind) ####
-- Use *= instead of multiplyBy when the level is very low as it is faster. multiplyBy uses relinearization which serves to reduce the size of ciphertexts. This is great for complex circuits but takes a longer time than *= for simple circuits.
-- Add circuits from [here](http://www.aoki.ecei.tohoku.ac.jp/arith/mg/algorithm.html) to the core API *he.cpp*.
-- Other ideas are in chapter 9: _Future work_ of my report.
-
-[dependencies_jpg]: /docs/dependencies.jpg
-[dropbox_pres]: https://www.dropbox.com/s/scrwpum0avtqxuw/Presentation.pptx?dl=1
-[github_pres]: /docs/Homomorphic%20encryption%20Cryptography%20for%20cloud%20computing%20presentation.pptx
-[youtube_pres]: https://www.youtube.com/watch?v=n-adgQWZYxI
-[dropbox_report]: https://www.dropbox.com/s/rqnrslzb1pstkq0/FYP%20report%20-%20Homomorphic%20encryption%20Cryptography%20for%20cloud%20computing%20-%20Quentin%20McGaw%20qdm12%202016.pdf?dl=1
-[github_report]: /docs/Homomorphic%20encryption%20Cryptography%20for%20cloud%20computing%20report.pdf
