@@ -1,8 +1,8 @@
-# QRS Detection using HElib to implement Wang's Dualslope Algorithm
+# Homomorphic QRS Detection **(hqrsd)**
 
 *This project is being developed as part of my Master's thesis at the University of Malaya*
 
-*Although this project is still in development, feel free to contact me at epperson . jessee at gmail . com)*
+*Although this project is still in development, feel free to contact me at epperson . jessee at gmail . com*
 
 
 ## 1. What is it, in *one* line?
@@ -11,24 +11,24 @@ It is an implementation of a QRS detection algorithm using fully homomorphic enc
 
 ## 2. What is in there?
 - It is written in C++ and is cross-platform with Vagrant
-- The binary circuit API (as developed by qdm12) in *src/he.cpp*.
-- The code that is ran as an **example** is in *src/main.cpp*.
+- The binary circuit API (as developed by qdm12) in *src/he.cpp*
+- The code that is run as an **example** is in *src/main.cpp*
 - Some other classes are in *src/helper_functions.cpp*
 - The QRS detection algorithm is implemented in *src/QRS_DETECTION.cpp*
-- All the other src files are **unit tests** and timing tests for the homomorphic binary operations implemented in *src/he.cpp*.
-- There is a **Vagrantfile** to setup eveything for you, cross-platform.
-- There is a **makefile** to build *qrs* or setup almost everything for you (depending on your OS).
+- All the other src files are **unit tests** and timing tests for the homomorphic binary operations implemented in *src/he.cpp*
+- There is a **Vagrantfile** to setup eveything for you, cross-platform
+- There is a **makefile** to build *hqrsd* or setup almost everything for you (depending on your OS).
 - There is this complete, detailed and updated **README.md** file.
 
 
 ## 3. What does it run ?
-- It runs the code in *main.cpp* which executes the QRS detection.
+- It runs the code in *main.cpp* which executes the QRS detection algorithm on ECG data found in a file specified in *main.cpp*.
 - You can change main.cpp with your code to suit your needs/inputs.
 
 
 ## 4. What does it require ?
 - Practically:
-    - A Linux/Windows/OSX computer
+    - A Linux/Windows/OS X computer
     - At least 3GB of RAM and 2 CPU cores
     - An internet connection
     - CPU with Hardware virtualization tech ideally (you probably have it don't worry)
@@ -46,6 +46,7 @@ It is an implementation of a QRS detection algorithm using fully homomorphic enc
 ## 5. Documentation
 - This readme file
 - Comments in the source code, especially in _QRS_DETECTION.cpp_
+- A link to my written thesis to come, once I finish writing it :) 
 
 
 ## 6. Abstract (Draft) ##
@@ -75,7 +76,7 @@ This basically launches an Ubuntu-based virtual machine with only what is necess
     - Changes you make are automatically reflected in the Ubuntu-based virtual machine.
     - Compile hqrsd again with `make hqrsd` in the virtual machine.
     - Run hqrsd with ./hqrsd from the virtual machine or your host machine.
-    - **Note:** *You can use `make hqrsdNrun` to build and automatically run the main.cpp code.
+    - **Note:** You can use `make hqrsdNrun` to build and automatically run the main.cpp code.
 11. When you are done:
     - Enter `exit` in the virtual machine, bringing you back to your host machine.
     - Enter `vagrant halt` to shutdown the machine. Or enter `vagrant destroy` to delete the machine.
@@ -184,9 +185,9 @@ This basically launches an Ubuntu-based virtual machine with only what is necess
 	
 ## 8. RAM considerations IMPORTANT
 - To run the default hqrsd program, at least 3GB of RAM is recommended.
-- Note that tests of simpler circuits such as the multiplication only require about 0.7 - 1GB of RAM, while averages take ~3GB
+- Note that applications which use simpler circuits will require less RAM, as simplier circuits like multiplication only require about 0.7 - 1GB of RAM, whereas the averages circuit takes about 3GB
 - For **Vagrant**, you can modify the amount of RAM in the **vb.memory** field, 
-  which is set to **2600MB** by default. To monitor the RAM usage, open a new 
+  which is set to **7000MB** by default. To monitor the RAM usage, open a new 
   host terminal, go to the working directory and use `vagrant ssh -c htop`.
 
 	  
@@ -204,7 +205,7 @@ This basically launches an Ubuntu-based virtual machine with only what is necess
 Just enter `vagrant destroy` from your host machine in the working directory.
 
 ### 10.2 Otherwise
-Use the makefile and run `make deepclean` which uninstalls and delete:
+Use the makefile and run `make deepclean` which uninstalls and deletes:
 - hqrsd
 - HElib, NTL, GMP
 - perl, m4, git, gcc-g++ and libboost-all-dev and purge them.
@@ -214,7 +215,9 @@ Only the makefile will remain in the folder.
 ## 11. Acknowledgements ##
 Credits to **Shai Halevi** for developing and maintaining HElib
 
+Credits to **Quentin McGaw** for developing and maintaining hbc, and for answering some of my questions about using his API
+
 Thanks to **Prof. Miss Laiha** (University Malaya) for her supervision over my research
 
-Thanks to my beloved **Amy** for her continuous love and support throughout my adventures in Southeast Asia.
+Thanks to my beloved **Amy** for her continuous love and support throughout my adventures in Southeast Asia
 
