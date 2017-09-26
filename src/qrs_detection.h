@@ -97,7 +97,7 @@ class QRS_Detection {
 		void initialize();                  // prepare for calculations
 		void make_copies(vector< vector<mkt> > input, vector< vector<mkt> > destination); // copy contents of one vector<vector<mkt>> to another one
 
-        void prepare_data(vector<long> sample_subset); // prepare data for homomorphic operations. 
+        void prepare_data(int iteration, int leftovers); // prepare data for homomorphic operations. 
 
         // Components of Dualslope algorithm broken into pieces (operating on FHE encrypted data)
         void compute_lr_slopes(vector< vector<mkt> > encrypted_pairs, bool simd);
@@ -116,17 +116,17 @@ class QRS_Detection {
         void update_thresholds(long diff_max); 
 
         void ds_fhe();
-        void ds_fhe(int iterations);
+        void ds_fhe(int iterations, int leftovers);
         void ds_unpacked_fhe();
-        void ds_unpacked_fhe(int iterations);
+        void ds_unpacked_fhe(int iterations, int leftovers);
         void ds_plain();
-        void ds_plain(int iterations);
+        void ds_plain(int iterations, int leftovers);
 
         bool test_ds_fhe();
-        bool test_ds_fhe(int iterations);
+        bool test_ds_fhe(int iterations, int leftovers);
         bool test_ds_unpacked_fhe();
-        bool test_ds_unpacked_fhe(int iterations);
+        bool test_ds_unpacked_fhe(int iterations, int leftovers);
         bool test_ds_plain();
-        bool test_ds_plain(int iterations);        
+        bool test_ds_plain(int iterations, int leftovers);        
 };
 #endif

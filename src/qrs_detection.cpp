@@ -20,7 +20,7 @@ QRS_Detection::QRS_Detection(vector<long> ecgs, int sampling_frequency, bool dbg
     fs = sampling_frequency;
     debug = dbg;
 
-    bits = 64;
+    bits = 64; // set here because set_params depends on them and initialize depends on set_params
 
 	set_params();
 	initialize();
@@ -47,11 +47,11 @@ void QRS_Detection::t_end(string name){
 Errors QRS_Detection::test_all(){
 	Errors e("QRS_Detection");
 	e.add("ds_fhe()", test_ds_fhe());
-	e.add("ds_fhe(5)", test_ds_fhe(5));
-	e.add("ds_fhe_unpacked()", test_ds_unpacked_fhe());
-	e.add("ds_fhe_unpacked(5)", test_ds_unpacked_fhe(5));
-	e.add("ds_plain()", test_ds_plain());
-	e.add("ds_plain(5)", test_ds_plain(5));
+//	e.add("ds_fhe(5,200)", test_ds_fhe(5,200));
+//	e.add("ds_fhe_unpacked()", test_ds_unpacked_fhe());
+//	e.add("ds_fhe_unpacked(5,200)", test_ds_unpacked_fhe(5,200));
+//	e.add("ds_plain()", test_ds_plain());
+//	e.add("ds_plain(5,200)", test_ds_plain(5,200));
 	return e;
 }
 
@@ -182,25 +182,21 @@ void QRS_Detection::initialize(){
         scaling_factors.push_back(x/i);
     }
 
-    // Compute samples*x, samples*x/a, ... , samples*x/b
-    for (int i = 0; i < nslots; i++){
-        samples_x.push_back(samples[i]*scaling_factors[0]);
-        samples_x_10.push_back(samples[i]*scaling_factors[1]);
-        samples_x_11.push_back(samples[i]*scaling_factors[2]);
-        samples_x_12.push_back(samples[i]*scaling_factors[3]);
-        samples_x_13.push_back(samples[i]*scaling_factors[4]);
-        samples_x_14.push_back(samples[i]*scaling_factors[5]);
-        samples_x_15.push_back(samples[i]*scaling_factors[6]);
-        samples_x_16.push_back(samples[i]*scaling_factors[7]);
-        samples_x_17.push_back(samples[i]*scaling_factors[8]);
-        samples_x_18.push_back(samples[i]*scaling_factors[9]);
-        samples_x_19.push_back(samples[i]*scaling_factors[10]);
-        samples_x_20.push_back(samples[i]*scaling_factors[11]);
-        samples_x_21.push_back(samples[i]*scaling_factors[12]);
-        samples_x_22.push_back(samples[i]*scaling_factors[13]);
-        samples_x_23.push_back(samples[i]*scaling_factors[14]);
-    }
-    
+    samples_x.resize(nslots,0);
+    samples_x_10.resize(nslots,0);
+    samples_x_11.resize(nslots,0);
+    samples_x_12.resize(nslots,0);
+    samples_x_13.resize(nslots,0);
+    samples_x_14.resize(nslots,0);
+    samples_x_15.resize(nslots,0);
+    samples_x_16.resize(nslots,0);
+    samples_x_17.resize(nslots,0);
+    samples_x_18.resize(nslots,0);
+    samples_x_19.resize(nslots,0);
+    samples_x_20.resize(nslots,0);
+    samples_x_21.resize(nslots,0);
+    samples_x_22.resize(nslots,0);
+    samples_x_23.resize(nslots,0);
 
     samples_bits_x.resize(bits, vector<long> (nslots,0));
     samples_bits_x_10.resize(bits, vector<long> (nslots,0));
@@ -217,6 +213,47 @@ void QRS_Detection::initialize(){
     samples_bits_x_21.resize(bits, vector<long> (nslots,0));
     samples_bits_x_22.resize(bits, vector<long> (nslots,0));
     samples_bits_x_23.resize(bits, vector<long> (nslots,0));
+}
+
+void QRS_Detection::make_copies(vector< vector<mkt> > input, vector< vector<mkt> > destination){
+	for(unsigned n = 0; n < destination.size(); n++){
+		for (unsigned b = 0; b < destination[n].size(); b++){
+			he.erase(destination[n][b]);
+		}
+	}
+	destination = vector< vector<mkt> >(input.size(), vector<mkt>(input[0].size())); // used to be (n_considered, vector<mkt>(bits))
+	for(unsigned n = 0; n < input.size(); n++){
+		for (unsigned b = 0; b < input[n].size(); b++){
+			destination[n][b] = he.copy(input[n][b]);
+		}
+	}
+}
+
+void QRS_Detection::prepare_data(int iteration, int leftovers){
+    int index = ((nslots - n_considered + 1) * iteration); // where to start pulling samples from 
+    
+    if (index + nslots - 1 > samples.size()){
+        index = samples.size() - nslots;    // read leftovers in full batch of nslots data (meaning we re-read some data)
+    }
+
+    // Compute samples*x, samples*x/a, ... , samples*x/b
+	for (int i = 0; i < nslots; i++){
+        samples_x[i] = samples[index + i]*scaling_factors[0];
+        samples_x_10[i] = samples[index + i]*scaling_factors[1];
+        samples_x_11[i] = samples[index + i]*scaling_factors[2];
+        samples_x_12[i] = samples[index + i]*scaling_factors[3];
+        samples_x_13[i] = samples[index + i]*scaling_factors[4];
+        samples_x_14[i] = samples[index + i]*scaling_factors[5];
+        samples_x_15[i] = samples[index + i]*scaling_factors[6];
+        samples_x_16[i] = samples[index + i]*scaling_factors[7];
+        samples_x_17[i] = samples[index + i]*scaling_factors[8];
+        samples_x_18[i] = samples[index + i]*scaling_factors[9];
+        samples_x_19[i] = samples[index + i]*scaling_factors[10];
+        samples_x_20[i] = samples[index + i]*scaling_factors[11];
+        samples_x_21[i] = samples[index + i]*scaling_factors[12];
+        samples_x_22[i] = samples[index + i]*scaling_factors[13];
+        samples_x_23[i] = samples[index + i]*scaling_factors[14];
+    }
 
     for (int i = 0; i < nslots; i++){
         bitset<64> b_x(samples_x[i]);
@@ -253,70 +290,53 @@ void QRS_Detection::initialize(){
         }
     }
 
-	k_constant_x.resize(bits);
+    k_constant_x.resize(bits);
 /*
     for (int i = 0; i < bits; i++){
         k_constant_x[i] = he.encrypt(samples_bits_x[i]);
         cout << "encrypted as: " << k_constant_x[i] << endl;
     }
-*/ 
+*/
 
     inputs.resize(n_considered, vector < long > (nslots,0));
-	v_in.resize(n_considered,vector< vector<long> >(bits,vector<long>(nslots,0)));
-	k_constant.resize(n_considered, vector < mkt>(bits));
+    v_in.resize(n_considered,vector< vector<long> >(bits,vector<long>(nslots,0)));
+    k_constant.resize(n_considered, vector < mkt>(bits));
 
-	//inputs to N bit circuits
-	for(unsigned j = 0; j < nslots; j++){  
-		    inputs[0][j] = samples_x[j];
+    //inputs to N bit circuits
+    for(unsigned j = 0; j < nslots; j++){
+            inputs[0][j] = samples_x[j];
             inputs[1][j] = samples_x_10[j];
-	}
-	
-	if(debug){
-        for(unsigned j = 0; j < nslots; j++){ 
-			    cout << "inputs[0][" << j << "]: " << inputs[0][j] << endl;
+    }
+
+    if(debug){
+        for(unsigned j = 0; j < nslots; j++){
+                cout << "inputs[0][" << j << "]: " << inputs[0][j] << endl;
                 cout << "inputs[1][" << j << "]: " << inputs[1][j] << endl;
         }
     }
 /*
-	//Converts inputs to bits into v_in for parallel ciphertexts
-	for(unsigned n = 0; n < n_considered; n++){
-		for(unsigned j = 0; j < nslots; j++){
-			bitset<64> bin(inputs[n][j]); //max is 2^64 so max nbits = 64
-			for(unsigned b = 0; b < bits; b++){
-				v_in[n][b][j] = bin[b]; //first ctxt (b = 0) is LSB
-			}
-		}
-	}
-	
-	//Encrypts all the vectors into ciphertexts
-	if(debug){
-		cout << className() << ": Encrypting input vectors (" << n_considered * bits << " vectors)" << endl;
-	}
-	for(unsigned n = 0; n < n_considered; n++){
-		for (unsigned b = 0; b < bits; b++){
-			k_constant[n][b] = he.encrypt(v_in[n][b]);
-			if(debug){
-				cout << "k_constant[" << n << "][" << b << "]: " << k_constant[n][b] << endl; 
-			}
-		}
-	}*/
-}
-
-void QRS_Detection::make_copies(vector< vector<mkt> > input, vector< vector<mkt> > destination){
-	for(unsigned n = 0; n < destination.size(); n++){
-		for (unsigned b = 0; b < destination[n].size(); b++){
-			he.erase(destination[n][b]);
-		}
-	}
-	destination = vector< vector<mkt> >(input.size(), vector<mkt>(input[0].size())); // used to be (n_considered, vector<mkt>(bits))
-	for(unsigned n = 0; n < input.size(); n++){
-		for (unsigned b = 0; b < input[n].size(); b++){
-			destination[n][b] = he.copy(input[n][b]);
-		}
-	}
-}
-
-void QRS_Detection::prepare_data(vector<long> sample_subset){
+    //Converts inputs to bits into v_in for parallel ciphertexts
+    for(unsigned n = 0; n < n_considered; n++){
+        for(unsigned j = 0; j < nslots; j++){
+            bitset<64> bin(inputs[n][j]); //max is 2^64 so max nbits = 64
+            for(unsigned b = 0; b < bits; b++){
+                v_in[n][b][j] = bin[b]; //first ctxt (b = 0) is LSB
+            }
+        }
+    }
+    
+    //Encrypts all the vectors into ciphertexts
+    if(debug){
+        cout << className() << ": Encrypting input vectors (" << n_considered * bits << " vectors)" << endl;
+    }
+    for(unsigned n = 0; n < n_considered; n++){
+        for (unsigned b = 0; b < bits; b++){
+            k_constant[n][b] = he.encrypt(v_in[n][b]);
+            if(debug){
+                cout << "k_constant[" << n << "][" << b << "]: " << k_constant[n][b] << endl; 
+            }
+        }
+    }*/
 
 }
 
@@ -397,66 +417,91 @@ void QRS_Detection::update_thresholds(long diff_max){
 
 /**********************DUALSLOPE*************************/
 
+// Process whole sample file using the dualslope (ds) algorithm run using fhe (HElib + hbc API) 
 void QRS_Detection::ds_fhe(){
-    int iterations_needed = n_samples / (nslots - n_considered);
-    iterations++; // 
+    
+    // number of ciphertext vectors with nslots of encrypted samples needed to run algorithm on whole sample set.
+ 	// note: subtracting n_considered and 1 because of overlap needed. Algorithm looks at (n_considered - 1) 
+    // samples previous to the currently considered sample, thus we must "repeat" these values in the new packed 
+    // ciphertext in order to process the next sample. 
+    int iterations_needed = n_samples / (nslots - n_considered + 1);
+    int leftovers =  n_samples % (nslots - n_considered + 1); 
+
+    if (leftovers != 0){
+        iterations_needed++; // if leftovers exist, add an iteration to process the leftover samples
+    }
     if (debug){
         cout << "iterations_needed = " << iterations_needed << endl;
+        cout << "leftovers = " << leftovers << endl;
     }
+    
+    ds_fhe(iterations_needed, leftovers);
 }
 
-void QRS_Detection::ds_fhe(int iterations){
+// Process sample file from beginning x = iterations number of times (1 iteration = nslots samples processed) 
+void QRS_Detection::ds_fhe(int iterations, int leftovers){    
+    for (int i = 0; i < iterations; i++){ 
+        prepare_data(i, leftovers); 
 
-    cout << "in ds_fhe(iterations), iterations = " << iterations << endl;
+        compute_lr_slopes(k, true);
+    }
+
 }
 
+// Process whole sample file using dualslope (ds) algortithm but not using packed ciphertexts
 void QRS_Detection::ds_unpacked_fhe(){
 
-    cout << "in ds_unpacked_fhe()" << endl;
 }
 
-void QRS_Detection::ds_unpacked_fhe(int iterations){
+// Process sample file from beginning x = iterations number of times (1 iteration = nslots samples processed) but not using packed ciphertexts  
+void QRS_Detection::ds_unpacked_fhe(int iterations, int leftovers){
 
-    cout << "in ds_unpacked_fhe(iterations), iterations = " << iterations << endl;
 }
 
+// Process whole sample file using the dualslope (ds) algorithm unencrypted 
 void QRS_Detection::ds_plain(){
 
-    cout << "in ds_plain()" << endl;
 }
 
-void QRS_Detection::ds_plain(int iterations){
-    cout << "in ds_plain(iterations), iterations = " << iterations << endl;
+// Process sample file from beginning x = iterations number of times (1 iteration = nslots samples processed) unencrypted 
+void QRS_Detection::ds_plain(int iterations, int leftovers){
+
 }
 
 /***********************TESTING**************************/
 
 bool QRS_Detection::test_ds_fhe(){
     ds_fhe();
+    //TODO implement check of values, return true if error occured
     return false;
 }
 
-bool QRS_Detection::test_ds_fhe(int iterations){
-    ds_fhe(iterations);
+bool QRS_Detection::test_ds_fhe(int iterations, int leftovers){
+    ds_fhe(iterations, leftovers);
+    //TODO implement check of values, return true if error occured
     return false;
 }
 
 bool QRS_Detection::test_ds_unpacked_fhe(){
     ds_unpacked_fhe();
+    //TODO implement check of values, return true if error occured
     return false;
 }
 
-bool QRS_Detection::test_ds_unpacked_fhe(int iterations){
-    ds_unpacked_fhe(iterations);
+bool QRS_Detection::test_ds_unpacked_fhe(int iterations, int leftovers){
+    ds_unpacked_fhe(iterations, leftovers);
+    //TODO implement check of values, return true if error occured
     return false;
 }
 
 bool QRS_Detection::test_ds_plain(){
     ds_plain();
+    //TODO implement check of values, return true if error occured
     return false;
 }
 
-bool QRS_Detection::test_ds_plain(int iterations){
-    ds_plain(iterations);
+bool QRS_Detection::test_ds_plain(int iterations, int leftovers){
+    ds_plain(iterations, leftovers);
+    //TODO implement check of values, return true if error occured
     return false;
 }
