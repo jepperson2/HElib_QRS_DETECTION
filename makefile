@@ -2,13 +2,11 @@ GMP_V = 6.1.2
 NTL_V = 10.5.0
 COMPILER = g++
 
-qrs : createdirs objects/he.o objects/helper_functions.o \
-		objects/test_gates.o objects/test_circ_comb.o objects/test_circ_seq.o \
-		objects/test_circ_arithm.o objects/qrs_detection.o \
-		objects/main.o
+#in hqrsd, include objects/test_... for each test you want to run in hqrsd:
+hqrsd : createdirs objects/he.o objects/helper_functions.o objects/qrs_detection.o objects/main.o
 	$(info )
-	$(info Compiling qrs...)
-	$(COMPILER) -std=c++11 objects/*.o HElib/src/fhe.a -o qrs -L/usr/local/lib -lntl -lgmp -lm
+	$(info Compiling hqrsd...)
+	$(COMPILER) -std=c++11 objects/*.o HElib/src/fhe.a -o hqrsd -L/usr/local/lib -lntl -lgmp -lm
 
 createdirs :
 	mkdir -p objects
@@ -19,26 +17,16 @@ objects/he.o : src/he.cpp src/he.h
 objects/helper_functions.o : src/helper_functions.cpp src/helper_functions.h
 	$(COMPILER) -std=c++11 -c src/helper_functions.cpp -o objects/helper_functions.o
 	
-objects/test_gates.o : src/TEST_GATES.cpp src/TEST_GATES.h
-	$(COMPILER) -std=c++11 -c src/TEST_GATES.cpp -I HElib/src -o objects/test_gates.o
-	
-objects/test_circ_comb.o : src/TEST_CIRC_COMB.cpp src/TEST_CIRC_COMB.h
-	$(COMPILER) -std=c++11 -c src/TEST_CIRC_COMB.cpp -I HElib/src -o objects/test_circ_comb.o
-	
-objects/test_circ_seq.o : src/TEST_CIRC_SEQ.cpp src/TEST_CIRC_SEQ.h
-	$(COMPILER) -std=c++11 -c src/TEST_CIRC_SEQ.cpp -I HElib/src -o objects/test_circ_seq.o
-	
-objects/test_circ_arithm.o : src/TEST_CIRC_ARITHM.cpp src/TEST_CIRC_ARITHM.h
-	$(COMPILER) -std=c++11 -c src/TEST_CIRC_ARITHM.cpp -I HElib/src -o objects/test_circ_arithm.o
-
 objects/qrs_detection.o : src/QRS_DETECTION.cpp src/QRS_DETECTION.h
 	$(COMPILER) -std=c++11 -c src/QRS_DETECTION.cpp -I HElib/src -o objects/qrs_detection.o
 	
 objects/main.o: src/main.cpp
 	$(COMPILER) -std=c++11 -c src/main.cpp -I HElib/src -o objects/main.o
 	
-qnr : qrs
-	./qrs
+hqrsdNrun : hqrsd
+	./hqrsd
+
+qnr : hqrsdNrun
 	
 ini :
 	sudo apt-get install -y git $(COMPILER) libboost-all-dev
@@ -87,8 +75,9 @@ clean :
 #	apt-get remove -y --purge perl git $(COMPILER) libboost-all-dev
 
 help : 
-	@echo make qrs - Compiles the project source code into an executable "qrs"
-	@echo make qnr - Compiles the project source code and runs it.
-	@echo make HElib - Downloads HElib and other libraries and installs them (already done in Vagrant)
+	@echo make hqrsd - Compiles the project source code into an executable "hqrsd"
+	@echo make hqrsdNrun - Compiles the project source code and runs it.
+	@echo make qnr - Compiles the project source code and runs it. --hqrsdNrun is too much to type in every time.
+	@echo make HElib - Downloads HElib and other libraries and installs them --already done in Vagrant
 	@echo make clean - Removes all executables .exe and objects .o
-#	@echo make deepclean - Removes all the libraries and packages installed. BE CAUTIOUS!
+	@echo make deepclean - Removes all the libraries and packages installed. BE CAUTIOUS! --Currently disabled because I am nervous I will accidentally use it...

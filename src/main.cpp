@@ -1,26 +1,25 @@
 #include "helper_functions.h"
-#include "TEST_GATES.h"
-#include "TEST_CIRC_COMB.h"
-#include "TEST_CIRC_SEQ.h"
-#include "TEST_CIRC_ARITHM.h"
-#include "QRS_DETECTION.h"
+#include "qrs_detection.h"
 
 int main(int argc, char **argv)
 {
 	cout << "======================================\n";
-	bool verbose = true;
+	bool verbose = false;
 
 	Timing t_all("Overall");
 	t_all.start();
 	Errors e("test");
 	
-    vector<double> samples = get_samples_from_file("MIT_BIH_Records/100_1s.txt", 2, verbose); 
+    vector<double> raw_samples = get_samples_from_file("MIT_BIH_Records/test.txt", 1, verbose); // read files from wfdb generated sample file, read values from 1st column. See helper_functions for details 
+	vector<long> samples = scale_samples(raw_samples, 1000); // scale samples to be integers. If precision != 3, adjust "1000" to be 10^precision
+   
+    QRS_Detection qrs_det(samples, 360, verbose);
 
-	QRS_DETECTION q_detection(samples, 360, verbose);
-	e = q_detection.test();
+	e = qrs_det.test_all();
 	e.display();
-	
+
     t_all.end();
 	cout << "======================================\n";
-	return 0;
+
+    return 0;
 }

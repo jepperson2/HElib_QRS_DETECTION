@@ -12,7 +12,11 @@ using namespace std;
 
 typedef string mkt; //Map Key Type - Key to access a ciphertext in the map
 string generate_string(int length);
+
 vector<double> get_samples_from_file(string filename, int channel, bool debug);
+vector<long> scale_samples(vector<double> samples, long scaling_factor);
+
+void print_banner(string title); 
 
 typedef struct key_params{
 	long m;

@@ -9,10 +9,10 @@ Vagrant.configure(2) do |config|
     #The average operation requires 6476MB of RAM for 3 bits!
     #Note that other operations require way less RAM, such as multiplication.
     vb.cpus = 2
-    #You can set it to 3 or more to run multiple instances of qrs If you have enough RAM.
-    vb.name = "qrs-virtual-machine"
+    #You can set it to 3 or more to run multiple instances of hqrsd If you have enough RAM.
+    vb.name = "hqrsd-virtual-machine"
   end
-  config.vm.hostname = "qrs-hostname"
+  config.vm.hostname = "hqrsd-hostname"
   config.vm.provision "shell", inline: <<-SHELL
     sudo apt-get update
     sudo apt-get install -y git g++ m4 perl libboost-all-dev htop 
@@ -57,10 +57,9 @@ Vagrant.configure(2) do |config|
         cd ../..
     fi
    
-    #Building qrs
-    make qrs
-    echo "qrs was successfully built ! Run it with: cd /vagrant && ./qrs"
-    echo "colorscheme desert" > ~/.vimrc
+    #Building hqrsd
+    make hqrsd
+    echo "hqrsd was successfully built ! Run it with: cd /vagrant && ./hqrsd"
   SHELL
 end
 

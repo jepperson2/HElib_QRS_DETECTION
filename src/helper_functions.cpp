@@ -48,6 +48,30 @@ vector<double> get_samples_from_file(string filename, int channel, bool debug){
     }   
 }
 
+vector<long> scale_samples(vector<double> samples, long scaling_factor){
+    vector<long> scaled;
+
+    for (int i = 0; i < samples.size(); i++){
+        scaled.push_back((long)(scaling_factor*samples[i]));
+    } 
+
+    return scaled;
+}
+
+void print_banner(string title){
+    if (!title.empty()){
+        size_t title_length = title.length();
+        size_t banner_length = title_length + 2 + 2 * 10;
+        string banner_top(banner_length, '*');
+        string banner_middle = string(10, '*') + " " + title + " " + string(10, '*');
+
+        cout << endl
+            << banner_top << endl
+            << banner_middle << endl
+            << banner_top << endl
+            << endl;
+    }
+}
 
 Errors::Errors(string t){
 	title = t;
