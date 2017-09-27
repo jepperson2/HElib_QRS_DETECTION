@@ -15,14 +15,15 @@
     
 
   */
-QRS_Detection::QRS_Detection(vector<long> ecgs, int sampling_frequency, bool dbg){
-	samples = ecgs;
+QRS_Detection::QRS_Detection(vector<double> raw_ecgs, vector<int> anns, int sampling_frequency, bool dbg){
+	raw_samples = raw_ecgs;
+    annotations = anns;
     fs = sampling_frequency;
     debug = dbg;
 
     bits = 64; // set here because set_params depends on them and initialize depends on set_params
 
-	set_params();
+	//set_params();
 	initialize();
 }
 
@@ -46,12 +47,12 @@ void QRS_Detection::t_end(string name){
 
 Errors QRS_Detection::test_all(){
 	Errors e("QRS_Detection");
-	e.add("ds_fhe()", test_ds_fhe());
+//	e.add("ds_fhe()", test_ds_fhe());
 //	e.add("ds_fhe(5,200)", test_ds_fhe(5,200));
 //	e.add("ds_fhe_unpacked()", test_ds_unpacked_fhe());
 //	e.add("ds_fhe_unpacked(5,200)", test_ds_unpacked_fhe(5,200));
 //	e.add("ds_plain()", test_ds_plain());
-//	e.add("ds_plain(5,200)", test_ds_plain(5,200));
+	e.add("ds_plain(393)", test_ds_plain(393));
 	return e;
 }
 
@@ -61,64 +62,7 @@ void QRS_Detection::set_params(){
 	params.d = 0; // field p^d
 	params.k = 128;
 	params.slb = 800;
-	params.L = 0;
-	if(params.L == 0){ //L not set 
-	//for the ripple carry adder so for circuits with complexity up to 3n+1
-	//not valid for ripple comparator !
-		switch(bits){
-			case 1:
-				params.L = 5;
-				break;
-			case 2:
-				params.L = 7;
-				break;
-			case 3:
-				params.L = 9;
-				break;
-			case 4:
-				params.L = 12;
-				break;
-			case 5:
-				params.L = 13;
-				break;
-			case 6:
-				params.L = 15;
-				break;
-			case 7:
-				params.L = 17;
-				break;
-			case 8:
-				params.L = 19;
-				break;
-			case 9:
-				params.L = 21;
-				break;
-			case 10:
-				params.L = 23;
-				break;
-			case 11:
-				params.L = 27;
-				break;
-			case 12:
-				params.L = 29;
-				break;
-			case 13:
-				params.L = 31;
-				break;
-			case 14:
-				params.L = 34;
-				break;
-			case 15:
-				params.L = 35;
-				break;
-			case 16:
-				params.L = 37;
-				break;
-			if(params.L == 0){ // bits not in 1 .. 16
-				params.L = 44; //should work with everything
-			}
-		}
-	}
+	params.L = 40;
 	
 	if ((params.L > 42)&&(params.slb > 600)){
 		params.L *= 1.2;
@@ -128,10 +72,13 @@ void QRS_Detection::set_params(){
 	
 	params.m = FindM(params.k,params.L,params.c,params.p,params.d,params.slb,0);
 }
+
 void QRS_Detection::initialize(){
     if (debug){
         cout << className() << ": Initializing..." << endl;
     }   
+
+    samples = scale_samples(raw_samples, 1000); // scale samples to be integers. If precision != 3, adjust "1000" to be 10^precision
 
     double double_a = 0.027 * fs;   // set as in Wang's paper, an estimate of the min width of QRS complex
     a = round(double_a);
@@ -145,7 +92,9 @@ void QRS_Detection::initialize(){
     min_threshold = 1536 / fs;      // threshold value given in paper
     avg_height = 0.0;               // set average height to 0. to be updated later based on sample heights
 
-    // Constant values of 1/a, 1/(a+1), ... , 1/b. These are the values of the "run" in the rise over run calculation of slope
+    // TODO - initialize encrypted thresholds
+
+    // Constant values of 1/a, 1/(a+1), ... , 1/b. These are the "run" in the rise over run calculation of slope
     double width;
     double rounded_width;
 
@@ -166,11 +115,13 @@ void QRS_Detection::initialize(){
         }
     }
 	n_samples = samples.size(); //Total number of samples given to process 
-	he.debug_on(debug);
+/*	he.debug_on(debug);
 	cout << className() << ": Number of bits n was set to " << bits << endl; 
 	nslots = he.keyGen(params);
 	mkt k_ones = he.setOnes(nslots);
 	he.set01(k_ones);
+*/
+    nslots = 1024; //TEMP! PUT BACK THE ABOVE WHEN RUNNING NON_FHE TESTS
 
 	// Compute scaling_factors based on a and b values. 
     long x = 5354228880;
@@ -228,6 +179,10 @@ void QRS_Detection::make_copies(vector< vector<mkt> > input, vector< vector<mkt>
 		}
 	}
 }
+
+/****************************************************************************/
+/************************* FHE Dualslope Methods ****************************/
+/****************************************************************************/
 
 void QRS_Detection::prepare_data(int iteration, int leftovers){
     int index = ((nslots - n_considered + 1) * iteration); // where to start pulling samples from 
@@ -289,7 +244,7 @@ void QRS_Detection::prepare_data(int iteration, int leftovers){
             samples_bits_x_23[b][i] = b_x_23[b];
         }
     }
-
+//TODO - implement any more data prep? set first two things to be comp'ed into k/k_constants? 
     k_constant_x.resize(bits);
 /*
     for (int i = 0; i < bits; i++){
@@ -314,49 +269,16 @@ void QRS_Detection::prepare_data(int iteration, int leftovers){
                 cout << "inputs[1][" << j << "]: " << inputs[1][j] << endl;
         }
     }
-/*
-    //Converts inputs to bits into v_in for parallel ciphertexts
-    for(unsigned n = 0; n < n_considered; n++){
-        for(unsigned j = 0; j < nslots; j++){
-            bitset<64> bin(inputs[n][j]); //max is 2^64 so max nbits = 64
-            for(unsigned b = 0; b < bits; b++){
-                v_in[n][b][j] = bin[b]; //first ctxt (b = 0) is LSB
-            }
-        }
-    }
-    
-    //Encrypts all the vectors into ciphertexts
-    if(debug){
-        cout << className() << ": Encrypting input vectors (" << n_considered * bits << " vectors)" << endl;
-    }
-    for(unsigned n = 0; n < n_considered; n++){
-        for (unsigned b = 0; b < bits; b++){
-            k_constant[n][b] = he.encrypt(v_in[n][b]);
-            if(debug){
-                cout << "k_constant[" << n << "][" << b << "]: " << k_constant[n][b] << endl; 
-            }
-        }
-    }*/
-
 }
 
-void QRS_Detection::compute_lr_slopes(vector< vector<mkt> > encrypted_pairs, bool simd){
+vector< vector<mkt> > QRS_Detection::compute_lr_slopes(vector< vector<mkt> > encrypted_pairs, bool simd){
+    vector< vector<mkt> > lr_slopes;
 
-}
-
-void QRS_Detection::compute_lr_slopes(vector< vector<long> > plain_pairs){
-
+    return lr_slopes;
 }
 
 vector<mkt> QRS_Detection::compute_min_max(vector<mkt> encrypted_list){
     vector<mkt> result;
-
-
-    return result;
-}
-
-vector<long> QRS_Detection::compute_min_max(vector<long> plain_list){
-    vector<long> result; 
 
 
     return result;
@@ -369,13 +291,6 @@ vector<mkt> QRS_Detection::compute_diff_max(vector<mkt> encrypted_mins_maxs){
     return result;
 }
 
-vector<long> QRS_Detection::compute_diff_max(vector<long> plain_mins_maxs){
-    vector<long> result;
-
-
-    return result;
-}
-
 vector<mkt> QRS_Detection::compare_to_thresholds(vector<mkt> diff_maxs){
     vector<mkt> result;
 
@@ -383,22 +298,8 @@ vector<mkt> QRS_Detection::compare_to_thresholds(vector<mkt> diff_maxs){
     return result;
 }
 
-vector<bool> QRS_Detection::compare_to_thresholds(vector<long> diff_maxs){
-    vector<bool> result;
-
-
-    return result;
-}
-
 mkt QRS_Detection::check_peak_closeness(vector<mkt> peaks){
     mkt true_peak;
-
-
-    return true_peak;
-}
-
-long QRS_Detection::check_peak_closeness(vector<long> peaks){
-    long true_peak;
 
 
     return true_peak;
@@ -411,11 +312,80 @@ vector<mkt> QRS_Detection::update_thresholds(vector<mkt> diff_maxs){
     return results;
 }
 
+/***************************************************************************/
+/********************* Cleartext Dualslope Methods *************************/
+/***************************************************************************/
+
+vector< vector<double> > QRS_Detection::compute_lr_slopes(int index){
+    vector< vector<double> > lr_slopes(2, vector<double>(lr_size,0));
+    
+    if (index < n_considered){
+        cout << "Error! Must choose index >= n_considered" << endl;
+        return lr_slopes; 
+    }
+
+    // compute slopes for values a to b samples away from index-b, our center sample. 
+    for (int i = 0; i < lr_size; i++){
+        // index offset by 1 because of raw_samples' 0-based indexing 
+        double l_diff = raw_samples[index-b] - raw_samples[index-(b-a)+i];
+        double r_diff = raw_samples[index-b] - raw_samples[index-(b+a)-i];
+
+        l_diff *= sample_difference_widths[i];
+        r_diff *= sample_difference_widths[i];
+      /* 
+        cout << "raw_samples[" << index-b << "]: " << raw_samples[index-b] << endl;
+        cout << "raw_samples[" << index-(b-a)+i << "]: " << raw_samples[index-(b-a)+i] << endl; 
+        cout << "raw_samples[" << index-(b+a)-i << "]: " << raw_samples[index-(b+a)-i] << endl;  
+        cout << "l_diff, r_diff: " << l_diff << ", " << r_diff << endl;
+        */
+
+        lr_slopes[0][i] = l_diff;
+        lr_slopes[1][i] = r_diff;
+    }
+    
+  /*  for (int i = index - n_considered + 1; i < index + 1; i++){
+        cout << "raw_samples[" << i << "]: " << raw_samples[i] << endl;
+    }
+    */
+
+    return lr_slopes;
+}
+
+vector<long> QRS_Detection::compute_min_max(vector<long> plain_list){
+    vector<long> result; 
+
+
+    return result;
+}
+
+vector<long> QRS_Detection::compute_diff_max(vector<long> plain_mins_maxs){
+    vector<long> result;
+
+
+    return result;
+}
+
+vector<bool> QRS_Detection::compare_to_thresholds(vector<long> diff_maxs){
+    vector<bool> result;
+
+
+    return result;
+}
+
+long QRS_Detection::check_peak_closeness(vector<long> peaks){
+    long true_peak;
+
+
+    return true_peak;
+}
+
 void QRS_Detection::update_thresholds(long diff_max){
 
 }
 
-/**********************DUALSLOPE*************************/
+/***************************************************************************/
+/************************ FHE Dualslope Algorithms *************************/
+/***************************************************************************/
 
 // Process whole sample file using the dualslope (ds) algorithm run using fhe (HElib + hbc API) 
 void QRS_Detection::ds_fhe(){
@@ -458,50 +428,66 @@ void QRS_Detection::ds_unpacked_fhe(int iterations, int leftovers){
 
 }
 
+/***************************************************************************/
+/******************** Cleartext Dualslope Algorithms ***********************/
+/***************************************************************************/
+
 // Process whole sample file using the dualslope (ds) algorithm unencrypted 
 void QRS_Detection::ds_plain(){
-
+    // We start at n_considered because the algorithm looks "back" at the previous n_considered - 1 samples 
+    for (int i = n_considered; i < raw_samples.size(); i++){
+        ds_plain(i);
+    }
 }
 
 // Process sample file from beginning x = iterations number of times (1 iteration = nslots samples processed) unencrypted 
-void QRS_Detection::ds_plain(int iterations, int leftovers){
+void QRS_Detection::ds_plain(int index){
+    vector< vector<double> > slopes = compute_lr_slopes(index);
 
 }
 
-/***********************TESTING**************************/
+/***************************************************************************/
+/******************************* Testing ***********************************/
+/***************************************************************************/
 
 bool QRS_Detection::test_ds_fhe(){
     ds_fhe();
     //TODO implement check of values, return true if error occured
+    // if (calculated_qrs_locations[everywhere] != annotations[everywhere]) return true;
     return false;
 }
 
 bool QRS_Detection::test_ds_fhe(int iterations, int leftovers){
     ds_fhe(iterations, leftovers);
     //TODO implement check of values, return true if error occured
+    // if (calculated_qrs_locations[everywhere] != annotations[everywhere]) return true;
     return false;
 }
 
 bool QRS_Detection::test_ds_unpacked_fhe(){
     ds_unpacked_fhe();
     //TODO implement check of values, return true if error occured
+    // if (calculated_qrs_locations[everywhere] != annotations[everywhere]) return true;
     return false;
 }
 
 bool QRS_Detection::test_ds_unpacked_fhe(int iterations, int leftovers){
     ds_unpacked_fhe(iterations, leftovers);
     //TODO implement check of values, return true if error occured
+    // if (calculated_qrs_locations[everywhere] != annotations[everywhere]) return true;
     return false;
 }
 
 bool QRS_Detection::test_ds_plain(){
     ds_plain();
     //TODO implement check of values, return true if error occured
+    // if (calculated_qrs_locations[everywhere] != annotations[everywhere]) return true;
     return false;
 }
 
-bool QRS_Detection::test_ds_plain(int iterations, int leftovers){
-    ds_plain(iterations, leftovers);
+bool QRS_Detection::test_ds_plain(int index){
+    ds_plain(index);
     //TODO implement check of values, return true if error occured
+    // if (calculated_qrs_locations[everywhere] != annotations[everywhere]) return true;
     return false;
 }

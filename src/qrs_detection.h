@@ -7,34 +7,37 @@
 
 class QRS_Detection {
 	public:
-		QRS_Detection(vector<long> ecgs, int sampling_frequency, bool dbg);
+		QRS_Detection(vector<double> raw_ecgs, vector<int> anns, int sampling_frequency, bool dbg);
 		Errors test_all();
 
 	private:
 		const string className();
 		bool debug;
-		HE he;                  // instance of HE, our API for homomorphic binary circuits 
+		HE he;                      // instance of HE, our API for homomorphic binary circuits 
 		Timing t;
 		Conversion conv;
-
-        int fs;                 // Sampling Frequency
-        vector<long> samples;
+        
+        vector<double> raw_samples; // raw samples taken in from file
+        vector<int> annotations;    // annotations of qrs locations - used to test accuracy of algorithms
+        int fs;                     // Sampling Frequency
         vector<double> sample_difference_widths;
 
-        int a;                  // minimum distance away from considered sample = 0.027*fs
-        int b;                  // maximum distance away from considered sample = 0.063*fs
-        int n_considered;       // number of samples processed at one time
-        int lr_size;            // size of "window" of values being compared to considered sample
+        vector<long> samples;       // scaled samples for use in fhe computations
 
-        double diff_threshold;  // Theta_diff
-        double min_threshold;   // Theta_min
-        double avg_height;      // H_ave 
+        int a;                      // minimum distance away from considered sample = 0.027*fs
+        int b;                      // maximum distance away from considered sample = 0.063*fs
+        int n_considered;           // number of samples processed at one time
+        int lr_size;                // size of "window" of values being compared to considered sample
+
+        double diff_threshold;      // Theta_diff
+        double min_threshold;       // Theta_min
+        double avg_height;          // H_ave 
 
         vector<mkt> encrypted_thresholds; // Encrypted thresholds
 
-        unsigned bits;          // number of bits in each sample
-		unsigned n_samples;     // total number of samples
-		long nslots;            // number of slots used in each Ciphertext (computed internally)
+        unsigned bits;              // number of bits in each sample
+		unsigned n_samples;         // total number of samples
+		long nslots;                // number of slots used in each Ciphertext (computed internally)
 		key_params params;
 
         vector < long > scaling_factors;   // how much to scale samples by so that calculations always done on whole numbers. 
@@ -100,7 +103,7 @@ class QRS_Detection {
         void prepare_data(int iteration, int leftovers); // prepare data for homomorphic operations. 
 
         // Components of Dualslope algorithm broken into pieces (operating on FHE encrypted data)
-        void compute_lr_slopes(vector< vector<mkt> > encrypted_pairs, bool simd);
+        vector< vector<mkt> > compute_lr_slopes(vector< vector<mkt> > encrypted_pairs, bool simd);
         vector<mkt> compute_min_max(vector<mkt> encrypted_list);
         vector<mkt> compute_diff_max(vector<mkt> encrypted_mins_maxs);
         vector<mkt> compare_to_thresholds(vector<mkt> diff_maxs);
@@ -108,7 +111,7 @@ class QRS_Detection {
         vector<mkt> update_thresholds(vector<mkt> diff_maxs); 
 
         // Components of Dualslope algorithm broken into pieces (operating on plaintext data)
-        void compute_lr_slopes(vector< vector<long> > plain_pairs);
+        vector< vector<double> > compute_lr_slopes(int index);
         vector<long> compute_min_max(vector<long> plain_list);
         vector<long> compute_diff_max(vector<long> plain_mins_maxs);
         vector<bool> compare_to_thresholds(vector<long> diff_maxs);
@@ -120,13 +123,13 @@ class QRS_Detection {
         void ds_unpacked_fhe();
         void ds_unpacked_fhe(int iterations, int leftovers);
         void ds_plain();
-        void ds_plain(int iterations, int leftovers);
+        void ds_plain(int index);
 
         bool test_ds_fhe();
         bool test_ds_fhe(int iterations, int leftovers);
         bool test_ds_unpacked_fhe();
         bool test_ds_unpacked_fhe(int iterations, int leftovers);
         bool test_ds_plain();
-        bool test_ds_plain(int iterations, int leftovers);        
+        bool test_ds_plain(int index);        
 };
 #endif
