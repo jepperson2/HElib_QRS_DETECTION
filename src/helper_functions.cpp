@@ -11,27 +11,40 @@ string generate_string(int length){
 }
 
 vector<double> get_samples_from_file(string filename, int channel, bool debug){
-    ifstream infile(filename);
-
-    string file_heading, file_units;
-
     vector<int> sample_numbers;
     vector<double> channel_1_values;
     vector<double> channel_2_values;
 
-    int tmp_samp_num;
-    double tmp_chan_1_val;
-    double tmp_chan_2_val;
+    string file_heading, file_units;
+
+    ifstream infile(filename);
+
+    if (!infile.is_open()){
+        cout << "Error! Could not open file: " << filename << ". Returning empty vector" << endl;
+        return channel_1_values;
+    }
 
     getline(infile, file_heading);
     getline(infile, file_units);
 
-    while (infile >> tmp_samp_num >> tmp_chan_1_val >> tmp_chan_2_val){
+    string line; 
+    int tmp_samp_num;
+    double tmp_chan_1_val;
+    double tmp_chan_2_val;
+    
+    while (getline(infile,line)){
+        istringstream iss(line);
+        if (!(iss >> tmp_samp_num >> tmp_chan_1_val >> tmp_chan_2_val)){
+            cout << "Error! We expected a different file format" << endl;
+            cout << "Something more like: sample_number\t channel_1 value (mV) \t channel_2 value (mV)" << endl;
+            break;
+        }
+
         sample_numbers.push_back(tmp_samp_num);
         channel_1_values.push_back(tmp_chan_1_val);
         channel_2_values.push_back(tmp_chan_2_val);
-    }   
-    
+    }
+
     if (debug){
         cout << file_heading << endl;
         cout << file_units << endl;
@@ -41,11 +54,78 @@ vector<double> get_samples_from_file(string filename, int channel, bool debug){
         }   
     }   
 
+    infile.close();
+
     if (channel == 1){ 
         return channel_1_values;
     } else {
         return channel_2_values;
     }   
+}
+
+vector<int> get_annotations_from_file(string filename, bool debug){
+    vector<string> times;
+    vector<int> sample_numbers;
+    vector<char> types;
+    vector<int> subs;
+    vector<int> chans;
+    vector<int> nums;
+    vector<string> auxs;
+
+    ifstream infile(filename);
+    
+    if (!infile.is_open()){
+        cout << "Error! Could not open file: " << filename << ". Returning empty vector" << endl;
+        return sample_numbers;
+    }
+
+    string file_heading;
+    getline(infile, file_heading);
+
+    string line;
+    string tmp_time;
+    int tmp_samp_num;
+    char tmp_char;
+    int tmp_sub;
+    int tmp_chan;
+    int tmp_num;
+    string tmp_aux;
+
+    while (getline(infile,line)){
+        istringstream iss(line);
+        if(!(iss >> tmp_time >> tmp_samp_num >> tmp_char >> tmp_sub >> tmp_chan >> tmp_num)){
+            cout << "Error! Expecting different file format" << endl;
+            cout << "Something more like: 0:00.214 \t 77 \t N \t 0 \t 0 \t 0 \t (VT" << endl;
+            break;
+        }
+        if(iss >> tmp_aux){
+            times.push_back(tmp_time);
+            sample_numbers.push_back(tmp_samp_num);
+            types.push_back(tmp_char);
+            subs.push_back(tmp_sub);
+            chans.push_back(tmp_chan);
+            nums.push_back(tmp_num);
+            auxs.push_back(tmp_aux);
+        } else {
+            times.push_back(tmp_time);
+            sample_numbers.push_back(tmp_samp_num);
+            types.push_back(tmp_char);
+            subs.push_back(tmp_sub);
+            chans.push_back(tmp_chan);
+            nums.push_back(tmp_num);
+            auxs.push_back("");
+        }
+    }   
+    
+    if (debug){
+        cout << file_heading << endl;
+
+        for (int i = 0; i < sample_numbers.size(); i++){
+            cout << times[i] << "\t" << sample_numbers[i] << "\t" << types[i] << "\t" << subs[i] << "\t" << chans[i] << "\t" << nums[i] << "\t" << auxs[i] << endl;
+        }   
+    }   
+    
+    return sample_numbers;
 }
 
 vector<long> scale_samples(vector<double> samples, long scaling_factor){
