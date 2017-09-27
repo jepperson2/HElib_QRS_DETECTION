@@ -1,0 +1,3 @@
+      Time   Sample #  Type  Sub Chan  Num	Aux
+    0:00.278      100     +    0    0    0	(N
+    0:00.675      243     R    0    0    0
