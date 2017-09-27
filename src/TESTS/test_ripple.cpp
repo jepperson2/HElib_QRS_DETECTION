@@ -1,4 +1,65 @@
-// Just code excerpts from what used to be TEST_CIRC_SEQ (I think), testing the different ripple circuits
+// Just code excerpts from set_params() and TEST_CIRC_SEQ (I think), testing the different ripple circuits
+
+
+/************************.h****************************
+    if(params.L == 0){ //L not set 
+    //for the ripple carry adder so for circuits with complexity up to 3n+1
+    //not valid for ripple comparator !
+        switch(bits){
+            case 1:
+                params.L = 5;
+                break;
+            case 2:
+                params.L = 7;
+                break;
+            case 3:
+                params.L = 9;
+                break;
+            case 4:
+                params.L = 12;
+                break;
+            case 5:
+                params.L = 13;
+                break;
+            case 6:
+                params.L = 15;
+                break;
+            case 7:
+                params.L = 17;
+                break;
+            case 8:
+                params.L = 19;
+                break;
+            case 9:
+                params.L = 21;
+                break;
+            case 10:
+                params.L = 23;
+                break;
+            case 11:
+                params.L = 27;
+                break;
+            case 12:
+                params.L = 29;
+                break;
+            case 13:
+                params.L = 31;
+                break;
+            case 14:
+                params.L = 34;
+                break;
+            case 15:
+                params.L = 35;
+                break;
+            case 16:
+                params.L = 37;
+                break;
+            if(params.L == 0){ // bits not in 1 .. 16
+                params.L = 44; //should work with everything
+            }
+        }
+    }
+*/
 
 /************************.h****************************
 
