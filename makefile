@@ -27,6 +27,8 @@ hqrsdNrun : hqrsd
 	./hqrsd
 
 qnr : hqrsdNrun
+
+cnr : clean qnr
 	
 ini :
 	sudo apt-get install -y git $(COMPILER) libboost-all-dev

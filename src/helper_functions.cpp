@@ -10,12 +10,10 @@ string generate_string(int length){
 	return s;
 }
 
-vector<double> get_samples_from_file(string filename, int channel, bool debug){
+vector<double> get_mV_samples(string filename, int channel, int num_header_lines, bool debug){
     vector<int> sample_numbers;
     vector<double> channel_1_values;
     vector<double> channel_2_values;
-
-    string file_heading, file_units;
 
     ifstream infile(filename);
 
@@ -24,8 +22,11 @@ vector<double> get_samples_from_file(string filename, int channel, bool debug){
         return channel_1_values;
     }
 
-    getline(infile, file_heading);
-    getline(infile, file_units);
+    vector<string> header(num_header_lines);
+
+    for (int i = 0; i < num_header_lines; i++){
+        getline(infile, header[i]);
+    }
 
     string line; 
     int tmp_samp_num;
@@ -46,8 +47,9 @@ vector<double> get_samples_from_file(string filename, int channel, bool debug){
     }
 
     if (debug){
-        cout << file_heading << endl;
-        cout << file_units << endl;
+        for (int i = 0; i < num_header_lines; i++){
+            cout << header[i] << endl;
+        }
 
         for (int i = 0; i < sample_numbers.size(); i++){
             cout << sample_numbers[i] << "\t\t" << channel_1_values[i] << "\t" << channel_2_values[i] << endl;
@@ -63,7 +65,62 @@ vector<double> get_samples_from_file(string filename, int channel, bool debug){
     }   
 }
 
-vector<int> get_annotations_from_file(string filename, bool debug){
+vector<long> get_digital_samples(string filename, int channel, int num_header_lines, bool debug){
+    vector<int> sample_numbers;
+    vector<long> channel_1_values;
+    vector<long> channel_2_values;
+
+    ifstream infile(filename);
+
+    if (!infile.is_open()){
+        cout << "Error! Could not open file: " << filename << ". Returning empty vector" << endl;
+        return channel_1_values;
+    }
+
+    vector<string> header(num_header_lines);
+
+    for (int i = 0; i < num_header_lines; i++){
+        getline(infile, header[i]);
+    }
+
+    string line; 
+    int tmp_samp_num;
+    long tmp_chan_1_val;
+    long tmp_chan_2_val;
+    
+    while (getline(infile,line)){
+        istringstream iss(line);
+        if (!(iss >> tmp_samp_num >> tmp_chan_1_val >> tmp_chan_2_val)){
+            cout << "Error! We expected a different file format" << endl;
+            cout << "Something more like: sample_number\t channel_1 value (ADC unit) \t channel_2 value (ADC unit)" << endl;
+            break;
+        }
+
+        sample_numbers.push_back(tmp_samp_num);
+        channel_1_values.push_back(tmp_chan_1_val);
+        channel_2_values.push_back(tmp_chan_2_val);
+    }
+
+    if (debug){
+        for (int i = 0; i < num_header_lines; i++){
+            cout << header[i] << endl;
+        }
+
+        for (int i = 0; i < sample_numbers.size(); i++){
+            cout << sample_numbers[i] << "\t\t" << channel_1_values[i] << "\t" << channel_2_values[i] << endl;
+        }   
+    }   
+
+    infile.close();
+
+    if (channel == 1){ 
+        return channel_1_values;
+    } else {
+        return channel_2_values;
+    }   
+}
+
+vector<int> get_annotations(string filename, bool debug){
     vector<string> times;
     vector<int> sample_numbers;
     vector<char> types;
