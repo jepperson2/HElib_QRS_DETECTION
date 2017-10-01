@@ -3,49 +3,114 @@
 #include "helper_functions.h"
 #include "he.h"
 #include <bitset>
-#include <stdlib.h> //rand
+#include <boost/circular_buffer.hpp>
 
 class QRS_Detection {
 	public:
-		QRS_Detection(vector<double> raw_ecgs, vector<int> anns, int sampling_frequency, bool dbg);
+        QRS_Detection(vector<long> digital_ecgs, vector<int> anns, int sampling_frequency, bool dbg);
 		Errors test_all();
 
 	private:
+        
+/***************************************************************************/
+/************************ Helper Methods / Classes *************************/
+/***************************************************************************/
+
+        // start the timer
+		void t_start();                     
+        // end the timer
+		void t_end(string name);            
+        // set parameters for BGV cryptosystem
+		void set_params();                  
+        // prepare for calculations
+		void initialize();                  
+        // copy contents of input vector<vector<mkt>> to destination
+		void make_copies(vector< vector<mkt> > input, vector< vector<mkt> > destination); 
+        // return the name of the current class
 		const string className();
-		bool debug;
-		HE he;                      // instance of HE, our API for homomorphic binary circuits 
+
+
+        // instance of HE, our API for homomorphic binary circuits 
+		HE he;                      
+        // instance of Timing, a class used for...timing
 		Timing t;
+        // instance of Conversion, a class used for converting between data types
 		Conversion conv;
         
-        vector<double> raw_samples; // raw samples taken in from file
-        vector<int> annotations;    // annotations of qrs locations - used to test accuracy of algorithms
-        int fs;                     // Sampling Frequency
+/***************************************************************************/
+/*************************** Plaintext Variables ***************************/
+/***************************************************************************/
+
+        // samples for use in computations (ADC values)
+        vector<long> samples;       
+        // annotations of qrs locations - used to test accuracy of algorithms
+        vector<int> annotations;    
+        // Sampling Frequency
+        int fs;                     
+        // set whether debugging information should be printed 
+		bool debug;
+
+
+        // minimum distance away from considered sample = 0.027*fs
+        int a;                      
+        // maximum distance away from considered sample = 0.063*fs
+        int b;                      
+        // number of samples processed at one time
+        int n_considered;           
+        // size of "window" of values being compared to considered sample
+        int lr_size;                
+
+
+        // possible "widths" between two considered samples. From 1/a to 1/b
         vector<double> sample_difference_widths;
+        // total number of samples
+		unsigned n_samples;         
+        
 
-        vector<long> samples;       // scaled samples for use in fhe computations
+        // Theta_diff
+        double diff_threshold;      
+        // Theta_min
+        double min_threshold;       
 
-        int a;                      // minimum distance away from considered sample = 0.027*fs
-        int b;                      // maximum distance away from considered sample = 0.063*fs
-        int n_considered;           // number of samples processed at one time
-        int lr_size;                // size of "window" of values being compared to considered sample
 
-        double diff_threshold;      // Theta_diff
-        double min_threshold;       // Theta_min
-        double avg_height;          // H_ave 
+        // s_ave = s_diff_max for peak. s_aves holds last 8 s_ave values
+        boost::circular_buffer<double> s_aves;  
+        // H_cur values for last 8 peaks  
+        boost::circular_buffer<double> h_aves;  
+        // h_cur 
+        double h_cur;                           
 
-        vector<mkt> encrypted_thresholds; // Encrypted thresholds
 
-        unsigned bits;              // number of bits in each sample
-		unsigned n_samples;         // total number of samples
-		long nslots;                // number of slots used in each Ciphertext (computed internally)
+        // locations of all potential QRS locations by sample number
+        vector<int> qrs_locations;
+
+/***************************************************************************/
+/****************************** FHE Variables ******************************/
+/***************************************************************************/
+
+        // Encrypted thresholds
+        vector<mkt> encrypted_thresholds; 
+
+
+        // number of bits in each sample
+        unsigned bits;              
+        // number of slots used in each Ciphertext (computed internally)
+		long nslots;                
 		key_params params;
 
-        vector < long > scaling_factors;   // how much to scale samples by so that calculations always done on whole numbers. 
 
-        vector < long > samples_x;         // samples scaled by x (which is set in initialize()) 
-        vector < long > samples_x_10;      // samples scaled by x / 10
-        vector < long > samples_x_11;      // samples scaled by x / 11
-        vector < long > samples_x_12;      // ...
+        // how much to scale samples by so that calculations always done on whole numbers. 
+        vector < long > scaling_factors;   
+
+
+        // samples scaled by x (which is set in initialize()) 
+        vector < long > samples_x;         
+        // samples scaled by x / 10
+        vector < long > samples_x_10;      
+        // samples scaled by x / 11
+        vector < long > samples_x_11;      
+        // ...
+        vector < long > samples_x_12;      
         vector < long > samples_x_13;
         vector < long > samples_x_14;
         vector < long > samples_x_15;
@@ -56,11 +121,16 @@ class QRS_Detection {
         vector < long > samples_x_20;
         vector < long > samples_x_21;
         vector < long > samples_x_22;
-        vector < long > samples_x_23;      // samples scaled by x / 23
+        // samples scaled by x / 23
+        vector < long > samples_x_23;      
 
-		vector < vector<long> > samples_bits_x;        // samples scaled by x converted to binary 
-		vector < vector<long> > samples_bits_x_10;     // samples scaled by x / 10 converted to binary
-		vector < vector<long> > samples_bits_x_11;     // ...
+
+        // samples scaled by x converted to binary 
+		vector < vector<long> > samples_bits_x;        
+        // samples scaled by x / 10 converted to binary
+		vector < vector<long> > samples_bits_x_10;    
+        // ...
+		vector < vector<long> > samples_bits_x_11;     
 		vector < vector<long> > samples_bits_x_12;
 		vector < vector<long> > samples_bits_x_13;
 		vector < vector<long> > samples_bits_x_14;
@@ -72,11 +142,16 @@ class QRS_Detection {
 		vector < vector<long> > samples_bits_x_20;
 		vector < vector<long> > samples_bits_x_21;
 		vector < vector<long> > samples_bits_x_22;
-		vector < vector<long> > samples_bits_x_23;     // samples scaled by x / 23 converted to binary 
+        // samples scaled by x / 23 converted to binary 
+		vector < vector<long> > samples_bits_x_23;     
 
-		vector < mkt > k_constant_x;        // samples_x encrypted - a vector of keys (see helper_functions.h)
-		vector < mkt > k_constant_x_10;     // samples_x_10 encrypted
-		vector < mkt > k_constant_x_11;     // ...
+
+        // samples_x encrypted - a vector of keys (see helper_functions.h)
+		vector < mkt > k_constant_x;        
+        // samples_x_10 encrypted
+		vector < mkt > k_constant_x_10;     
+        // ...
+		vector < mkt > k_constant_x_11;     
 		vector < mkt > k_constant_x_12;
 		vector < mkt > k_constant_x_13;
 		vector < mkt > k_constant_x_14;
@@ -88,35 +163,43 @@ class QRS_Detection {
 		vector < mkt > k_constant_x_20;
 		vector < mkt > k_constant_x_21;
 		vector < mkt > k_constant_x_22;
-		vector < mkt > k_constant_x_23;     // samples_x_23 encrypted
+        // samples_x_23 encrypted
+		vector < mkt > k_constant_x_23;     
+        
 
-		vector< vector < long > > inputs;          //variable passed to binary circuits
-		vector< vector < vector<long> > >  v_in;   //inputs converted to bitsets to be passed to circuits
-		vector< vector < mkt > > k, k_constant;    //encrypted values passed to circuits
+        //variable passed to binary circuits
+		vector< vector < long > > inputs;          
+        //inputs converted to bitsets to be passed to circuits
+		vector< vector < vector<long> > >  v_in;   
+        //encrypted values passed to circuits
+		vector< vector < mkt > > k, k_constant;    
 
-		void t_start();                     // start the timer
-		void t_end(string name);            // end the timer
-		void set_params();                  // set parameters for BGV cryptosystem
-		void initialize();                  // prepare for calculations
-		void make_copies(vector< vector<mkt> > input, vector< vector<mkt> > destination); // copy contents of one vector<vector<mkt>> to another one
 
-        void prepare_data(int iteration, int leftovers); // prepare data for homomorphic operations. 
+/***************************************************************************/
+/************************** FHE Dualslope Methods **************************/
+/***************************************************************************/
 
-        // Components of Dualslope algorithm broken into pieces (operating on FHE encrypted data)
+        void prepare_data(int iteration, int leftovers); 
         vector< vector<mkt> > compute_lr_slopes(vector< vector<mkt> > encrypted_pairs, bool simd);
-        vector<mkt> compute_min_max(vector<mkt> encrypted_list);
-        vector<mkt> compute_diff_max(vector<mkt> encrypted_mins_maxs);
+        vector<mkt> compute_mins_maxs(vector<mkt> encrypted_list);
+        vector<mkt> compute_diff_maxs(vector<mkt> encrypted_mins_maxs);
         vector<mkt> compare_to_thresholds(vector<mkt> diff_maxs);
         mkt check_peak_closeness(vector<mkt> peaks);
         vector<mkt> update_thresholds(vector<mkt> diff_maxs); 
 
-        // Components of Dualslope algorithm broken into pieces (operating on plaintext data)
+/***************************************************************************/
+/*********************** Plaintext Dualslope Methods ***********************/
+/***************************************************************************/
+
         vector< vector<double> > compute_lr_slopes(int index);
-        vector<long> compute_min_max(vector<long> plain_list);
-        vector<long> compute_diff_max(vector<long> plain_mins_maxs);
-        vector<bool> compare_to_thresholds(vector<long> diff_maxs);
+        vector< vector<double> > compute_mins_maxs(vector< vector<double> > plain_list);
+        bool compare_to_thresholds(vector< vector<double> > mins_maxs);
         long check_peak_closeness(vector<long> peaks);
         void update_thresholds(long diff_max); 
+
+/***************************************************************************/
+/************************** Dualslope Algorithms ***************************/
+/***************************************************************************/
 
         void ds_fhe();
         void ds_fhe(int iterations, int leftovers);
@@ -124,6 +207,10 @@ class QRS_Detection {
         void ds_unpacked_fhe(int iterations, int leftovers);
         void ds_plain();
         void ds_plain(int index);
+
+/***************************************************************************/
+/******************************** Testing **********************************/
+/***************************************************************************/
 
         bool test_ds_fhe();
         bool test_ds_fhe(int iterations, int leftovers);
