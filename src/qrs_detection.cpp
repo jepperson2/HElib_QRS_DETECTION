@@ -18,7 +18,7 @@
 QRS_Detection::QRS_Detection(vector<long> digital_ecgs, vector<int> anns, int sampling_frequency, bool dbg){
 	samples = digital_ecgs;
     annotations = anns;
-    fs = sampling_frequency;
+    fs = (double)sampling_frequency;
     debug = dbg;
 
     // set here because set_params depends on them and initialize depends on set_params
@@ -34,8 +34,8 @@ Errors QRS_Detection::test_all(){
 //	e.add("ds_fhe(5,200)", test_ds_fhe(5,200));
 //	e.add("ds_fhe_unpacked()", test_ds_unpacked_fhe());
 //	e.add("ds_fhe_unpacked(5,200)", test_ds_unpacked_fhe(5,200));
-//	e.add("ds_plain()", test_ds_plain());
-	e.add("ds_plain(46)", test_ds_plain(46));
+	e.add("ds_plain()", test_ds_plain());
+//	e.add("ds_plain(46)", test_ds_plain(46));
 	return e;
 }
 
@@ -108,9 +108,9 @@ void QRS_Detection::initialize(){
 
 
     // initial diff_threshold value. to be updated later based on S_ave
-    diff_threshold = 3840 / (double)fs; 
+    diff_threshold = 3840 / fs; 
     // threshold value given in paper
-    min_threshold = 1536 / (double)fs;  
+    min_threshold = 1536 / fs; 
 
 
     // initialize s_aves to size 8.
@@ -353,8 +353,8 @@ vector< vector<double> > QRS_Detection::compute_lr_slopes(int index){
 
     // compute slopes for values a to b samples away from index-b, our center sample. 
     for (int i = 0; i < lr_size; i++){
-        double l_diff = samples[index-b] - samples[index-(b-a)+i];
-        double r_diff = samples[index-b] - samples[index-(b+a)-i];
+        double l_diff = samples[index-b] - samples[index-(b-a)+i]; 
+        double r_diff = samples[index-b] - samples[index-(b+a)-i]; 
 
         l_diff *= sample_difference_widths[i];
         r_diff *= sample_difference_widths[i];
@@ -398,22 +398,21 @@ bool QRS_Detection::compare_to_thresholds(vector< vector<double> > mins_maxs){
     double r_max_l_min = mins_maxs[1][1] - mins_maxs[0][0];
     double l_max_r_min = mins_maxs[0][1] - mins_maxs[1][0];
     
-    double diff_max;
     double s_min;
     bool signs_different;
 
     if (r_max_l_min > l_max_r_min){
-        diff_max = r_max_l_min;
+        s_diff_max = r_max_l_min;
         s_min = min(mins_maxs[1][1], mins_maxs[0][0]);
         signs_different = (signbit(mins_maxs[1][1]) != signbit(mins_maxs[0][0]));
     } else {
-        diff_max = l_max_r_min;
+        s_diff_max = l_max_r_min;
         s_min = min(mins_maxs[0][1], mins_maxs[1][0]);
         signs_different = (signbit(mins_maxs[0][1]) != signbit(mins_maxs[1][0]));
     }
     
     if (debug){
-        cout << "diff_max = " << diff_max << endl;
+        cout << "s_diff_max = " << s_diff_max << endl;
         cout << "s_min = " << s_min << endl;
         cout << "signs_different = " << signs_different << endl;
         cout << "diff_threshold = " << diff_threshold << endl; 
@@ -421,35 +420,86 @@ bool QRS_Detection::compare_to_thresholds(vector< vector<double> > mins_maxs){
         cout << "h_cur = " << h_cur << endl; 
     }
 
-    if (diff_max <= diff_threshold){
+    if (s_diff_max <= diff_threshold){
         return false;
+    }
+    if (debug){
+        cout << "s_diff_max > diff_threshold!" << endl;
     }
 
     if (s_min <= min_threshold){
         return false;
     }
+    if (debug){
+        cout << "s_min > min_threshold!" << endl;
+    }
     
-    if (!signs_different){
+    if (signs_different){
         return false;
     }
+    if (debug){
+        cout << "!signs_different, so the same?" << endl;
+    }
 
-    double H_ave = std::accumulate(h_aves.begin(), h_aves.end(), 0);
+    double H_ave = std::accumulate(h_aves.begin(), h_aves.end(), 0.0);
+    if (h_aves.size() != 0){
+        // H_ave = average sample height in mV for the previous 8 peaks  
+        H_ave /= h_aves.size(); 
+    }
+    if (debug) {
+        cout << "H_ave = " << H_ave << endl;
+    }
     if (h_cur <= 0.4 * H_ave){
         return false;
     }
-
+    if (debug) {
+        cout << "h_cur > 0.4 * H_ave!" << endl;
+    }
     return true;
 }
 
-long QRS_Detection::check_peak_closeness(vector<long> peaks){
-    long true_peak;
-
-
-    return true_peak;
+bool QRS_Detection::check_local_extremes(int index){
+    // if peak index is within b samples of previous peak, update peak to be the one with the greater s_diff_max 
+    // (current one stored in global s_diff_max, the other is the most recently added value to s_aves)
+    if (qrs_locations.size() != 0){
+        int last_peak = qrs_locations.back();
+        // if last_peak is within the considered sample range, eliminate the peak with lower s_diff_max
+        if ((index - n_considered) <= last_peak){ 
+            double last_peak_diff_max = s_aves.back();
+            if (s_diff_max > last_peak_diff_max){
+                qrs_locations[qrs_locations.size() - 1] = (index - b);
+                s_aves[s_aves.size() - 1] = s_diff_max;
+                h_aves[h_aves.size() - 1] = h_cur;
+            }
+            // return true because there was a local_extreme in range and appropriate action has been taken
+            return true;
+        }
+    }
+    // return false because there was no local_extreme in range and no action has been taken 
+    return false;
 }
 
-void QRS_Detection::update_thresholds(long diff_max){
-
+void QRS_Detection::update_thresholds(){
+    double S_ave = std::accumulate(s_aves.begin(), s_aves.end(), 0.0);
+    if (s_aves.size() != 0){
+        S_ave /= s_aves.size();
+    }
+    
+    double tmp = diff_threshold;
+    // high_ave and low_ave are given in Wang's paper
+    double high_ave = 20480 / fs; 
+    double low_ave = 12800 / fs;
+    
+    if (S_ave > high_ave){
+        diff_threshold = 7680 / fs;
+    } else if (S_ave > low_ave){
+        diff_threshold = 4352 / fs;
+    } else {
+        diff_threshold = 3840 / fs;
+    }
+    if (tmp != diff_threshold){
+        cout << "WOAHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH! tmp = " << tmp << ", diff_threshold = " << diff_threshold << endl;
+    }
 }
 
 /***************************************************************************/
@@ -512,15 +562,41 @@ void QRS_Detection::ds_plain(){
 
 // Process sample file from beginning x = iterations number of times (1 iteration = nslots samples processed) unencrypted 
 void QRS_Detection::ds_plain(int index){
-    h_cur = samples[index - b];
+    /*if ((index > 649750) && (index < 649760)){
+        debug = true;
+        cout << "WE'RE ON INDEX = " << index << ", ok? ==================, index - b = " << index - b << endl;
+    } else {
+        debug = false;
+    }*/
+    h_cur = (samples[index - b] - 1024) * 0.005; // Convert samples from ADU counts to mV. 11-bit over ~10mV 
     vector< vector<double> > slopes = compute_lr_slopes(index);
     vector< vector<double> > mins_maxs = compute_mins_maxs(slopes);
-    bool need_update = compare_to_thresholds(mins_maxs);
-    if (need_update){
-        cout << "Yo! We need an update up in hurr!" << endl;
-    } else {
-        cout << "No update needed..." << endl;
-    }
+    bool is_peak = compare_to_thresholds(mins_maxs);
+    if (is_peak){
+        if (debug){
+            cout << "we found a peak! ------------------------------" << endl;
+            cout << "index - b, s_diff_max, h_cur = " << index-b << ", " << s_diff_max << ", " << h_cur << endl;
+        }
+        /*for (int i = 0; i < h_aves.size(); i++){
+            cout << "h_aves[" << i << "]: " << h_aves[i] << endl;
+            double tmpH_ave = std::accumulate(h_aves.begin(), h_aves.end(), 0.0);
+            if (h_aves.size() != 0){
+                tmpH_ave /= h_aves.size();
+            }
+            cout << "\t\t H_ave = " << tmpH_ave << endl;
+        }*/
+        bool local_extreme_found = check_local_extremes(index); 
+        if (!local_extreme_found){
+            qrs_locations.push_back(index-b);
+            s_aves.push_back(s_diff_max);
+            h_aves.push_back(h_cur);
+        }
+        update_thresholds();
+    }/* else {
+        cout << "index - b = " << index - b << " wasn't a peak :( " << endl;
+    }*/
+    
+    return;
 }
 
 
@@ -593,8 +669,32 @@ bool QRS_Detection::test_ds_unpacked_fhe(int iterations, int leftovers){
 
 bool QRS_Detection::test_ds_plain(){
     ds_plain();
-    //TODO implement check of values, return true if error occured
-    // if (calculated_qrs_locations[everywhere] != annotations[everywhere]) return true;
+
+    cout << "qrs vs ann size: " << qrs_locations.size() << ", " << annotations.size() << endl;
+    int false_neg = 0;
+    int false_pos = 0;
+    for (int i = 0; i < qrs_locations.size(); i++){
+        int diff = annotations[i] - qrs_locations[i];
+        if (diff > 5){ // thought there was a beat here. oops!
+            annotations.insert(annotations.begin() + i, -1);
+            false_pos++;
+        } 
+        if (diff < -5){ // missed an annotated beat!
+            qrs_locations.insert(qrs_locations.begin() + i, -1);
+            false_neg++;
+        }
+    }
+    
+    for (int i = qrs_locations.size() + false_neg; i < annotations.size(); i++){
+        qrs_locations.insert(qrs_locations.begin() + i, -1);
+        false_neg++;
+    }
+
+    for (int i = 0; i < qrs_locations.size(); i++){
+        cout << qrs_locations[i] << ", " << annotations[i] << endl;
+    }
+    cout << "false_neg,pos count = " << false_neg << ", " << false_pos << endl;
+    cout << "qrs vs ann size: " << qrs_locations.size() << ", " << annotations.size() << endl;
     return false;
 }
 

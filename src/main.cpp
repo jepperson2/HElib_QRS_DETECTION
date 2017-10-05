@@ -9,27 +9,16 @@ int main(int argc, char **argv)
 	t_all.start();
 	Errors e("test");
     
-    string filename = "207_10s";
+    vector<string> files = { "100","101","102","103","104","105","106","107","108","109","111","112","113","114","115","116","117","118","119","121","122","123","124","200","201","202","203","205","207","208","209","210","212","213","214","215","217","219","220","221","222","223","228","230","231","232","233","234" };
 
-    string mV_sample_path = "MIT_BIH_Records/" + filename + ".txt";
+    string filename = files[0];// + "_10s";
+
     string digital_sample_path = "MIT_BIH_Records/DIGITAL/" + filename + ".txt";
     string annotation_path = "MIT_BIH_Records/ANNOTATIONS/" + filename + ".txt";
 
-    vector<double> mV_samples = get_mV_samples(mV_sample_path, 1, 2, verbose);
-    // scale samples to be integers. If precision != 3, adjust "1000" to be 10^precision
-    vector<long> scaled_mV_samples = scale_samples(mV_samples, 1000); 
-
     vector<long> digital_samples = get_digital_samples(digital_sample_path, 1, 1, verbose);
     vector<int> annotations = get_annotations(annotation_path, verbose); 
-/*
-    boost::circular_buffer<int> cb(8);
-    
-    for (int i = 0; i < 12; i++){
-        cb.push_back(i);
-        int sum = std::accumulate(cb.begin(), cb.end(), 0);
-        cout << "sum = " << sum << endl;
-    }
-*/
+
     QRS_Detection qrs_det(digital_samples, annotations, 360, verbose);
 	e = qrs_det.test_all();
 	e.display();

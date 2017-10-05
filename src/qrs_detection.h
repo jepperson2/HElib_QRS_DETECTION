@@ -46,7 +46,7 @@ class QRS_Detection {
         // annotations of qrs locations - used to test accuracy of algorithms
         vector<int> annotations;    
         // Sampling Frequency
-        int fs;                     
+        double fs;                     
         // set whether debugging information should be printed 
 		bool debug;
 
@@ -79,6 +79,8 @@ class QRS_Detection {
         boost::circular_buffer<double> h_aves;  
         // h_cur 
         double h_cur;                           
+        // s_diff_max
+        double s_diff_max;
 
 
         // locations of all potential QRS locations by sample number
@@ -194,8 +196,8 @@ class QRS_Detection {
         vector< vector<double> > compute_lr_slopes(int index);
         vector< vector<double> > compute_mins_maxs(vector< vector<double> > plain_list);
         bool compare_to_thresholds(vector< vector<double> > mins_maxs);
-        long check_peak_closeness(vector<long> peaks);
-        void update_thresholds(long diff_max); 
+        bool check_local_extremes(int index);
+        void update_thresholds(); 
 
 /***************************************************************************/
 /************************** Dualslope Algorithms ***************************/
