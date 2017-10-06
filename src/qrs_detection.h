@@ -8,7 +8,7 @@
 class QRS_Detection {
 	public:
         QRS_Detection(vector<long> digital_ecgs, vector<int> anns, int sampling_frequency, bool dbg);
-		Errors test_all();
+		Errors test_all(int file_index);
 
 	private:
         
@@ -59,13 +59,16 @@ class QRS_Detection {
         int n_considered;           
         // size of "window" of values being compared to considered sample
         int lr_size;                
+        // total number of samples
+		unsigned n_samples;         
 
 
         // possible "widths" between two considered samples. From 1/a to 1/b
         vector<double> sample_difference_widths;
-        // total number of samples
-		unsigned n_samples;         
-        
+        // false negatives reported by Wang in paper
+        vector<int> false_negatives;
+        // false positives reported by Wang in paper
+        vector<int> false_positives;
 
         // Theta_diff
         double diff_threshold;      
@@ -195,7 +198,7 @@ class QRS_Detection {
 
         vector< vector<double> > compute_lr_slopes(int index);
         vector< vector<double> > compute_mins_maxs(vector< vector<double> > plain_list);
-        bool compare_to_thresholds(vector< vector<double> > mins_maxs);
+        bool compare_to_thresholds(vector< vector<double> > mins_maxs, int index);
         bool check_local_extremes(int index);
         void update_thresholds(); 
 
@@ -218,7 +221,7 @@ class QRS_Detection {
         bool test_ds_fhe(int iterations, int leftovers);
         bool test_ds_unpacked_fhe();
         bool test_ds_unpacked_fhe(int iterations, int leftovers);
-        bool test_ds_plain();
-        bool test_ds_plain(int index);        
+        bool test_ds_plain(int file_index);
+        bool test_ds_plain(int file_index, int sample_index);        
 };
 #endif
