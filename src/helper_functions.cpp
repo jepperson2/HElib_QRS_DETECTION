@@ -213,10 +213,12 @@ void print_banner(string title){
 Errors::Errors(string t){
 	title = t;
 }
+
 void Errors::add(string name, bool error){
 	names.push_back(name);
 	errors.push_back(error);
 }
+
 void Errors::display(){
 	bool no_error = true;
 	for (int i = 0; i < errors.size(); i++){
@@ -234,20 +236,24 @@ Timing::Timing(){
 	title = "";
 	measure_id = 0;
 }
+
 Timing::Timing(string t){
 	title = t + ": ";
 	measure_id = 0;
 }
+
 void Timing::start(){
 	measure_id++;
 	a = clock();
 }
+
 void Timing::end(){
 	b = clock();
 	duration = double(b - a)/CLOCKS_PER_SEC;
 	cout << title << "Duration of measurement " << measure_id << ": ";
 	cout << duration << " seconds" << endl;
 }
+
 double Timing::end(string silent){
 	b = clock();
 	duration = double(b - a)/CLOCKS_PER_SEC;
@@ -260,16 +266,19 @@ bool Conversion::str2Bool(string bit){
 	is >> ret;
 	return ret;
 }
+
 string Conversion::bool2Str(bool value){
 	ostringstream os ;
 	os << value;
 	return os.str();
 }
+
 string Conversion::long2Str(long value){
 	ostringstream os;
 	os << value;
 	return os.str();
 }
+
 string Conversion::long2bitStr(long value){
 	//Only for positive values (no 2's complement)
 	unsigned bits = 0;
@@ -284,14 +293,17 @@ string Conversion::long2bitStr(long value){
 	}
 	return bin_str;
 }
+
 long Conversion::bitStr2Long(string bin_str){ //max 32 bits
 	bitset<32> bin(bin_str);
 	return bin.to_ulong();
 }
+
 string Conversion::bitStr2LongStr(string bin_str){ //max 32 bits
 	//Only for positive values (no 2's complement)
 	return long2Str(bitStr2Long(bin_str));
 }
+
 long Conversion::signedBitStr2Long(string bin_str){
 	string substring = bin_str.substr(0,1);
 	if (str2Bool(substring)){ //2s complement MSB
@@ -310,9 +322,11 @@ long Conversion::signedBitStr2Long(string bin_str){
 		return binary.to_ulong();
 	}
 }
+
 string Conversion::signedBitStr2LongStr(string bin_str){
 	return long2Str(signedBitStr2Long(bin_str));
 }
+
 vector<string> Conversion::matrix2bitStrVec(vector< vector<long> > v_out){
 	unsigned nbits = v_out.size();
 	unsigned nslots = v_out[0].size();
@@ -328,6 +342,7 @@ vector<string> Conversion::matrix2bitStrVec(vector< vector<long> > v_out){
 	}
 	return v_out_binstr;
 }
+
 vector<long> Conversion::matrix2LongVec(vector< vector<long> > v_out){
 	unsigned nbits = v_out.size();
 	unsigned nslots = v_out[0].size();
@@ -344,6 +359,7 @@ vector<long> Conversion::matrix2LongVec(vector< vector<long> > v_out){
 	}
 	return v_out_long;
 }
+
 vector<long> Conversion::matrix2SignedLongVec(vector< vector<long> > v_out){
 	unsigned nbits = v_out.size();
 	unsigned nslots = v_out[0].size();
@@ -360,6 +376,7 @@ vector<long> Conversion::matrix2SignedLongVec(vector< vector<long> > v_out){
 	}
 	return v_out_long;
 }
+
 vector< vector<long> > Conversion::longVec2Matrix(vector< long > v_in){
 	//Finds the number of bits necessary to represent the integers
 	unsigned temp, bits = 0;
@@ -390,5 +407,3 @@ vector< vector<long> > Conversion::longVec2Matrix(vector< long > v_in){
 	
 	return v_in_bits;
 }
-
-

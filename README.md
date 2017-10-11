@@ -215,7 +215,7 @@ Only the makefile will remain in the folder.
 ## 11. Acknowledgements ##
 Credits to **Shai Halevi** for developing and maintaining HElib
 
-Credits to **Quentin McGaw** for developing and maintaining hbc, and for answering some of my questions about using his API
+Credits to **Quentin McGaw** for developing and maintaining hbc, and for answering my questions about using his API
 
 Thanks to **Prof. Miss Laiha** (University Malaya) for her supervision over my research
 
