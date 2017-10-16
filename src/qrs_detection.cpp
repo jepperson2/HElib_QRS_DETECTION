@@ -22,7 +22,6 @@ QRS_Detection::QRS_Detection(vector<long> digital_ecgs, vector<int> anns, int sa
 
     // set here because set_params depends on bits and initialize depends on set_params
     bits = ceil(bits_needed); 
-
 	set_params();
 	initialize();
 }
@@ -58,16 +57,14 @@ void QRS_Detection::t_end(string name){
 void QRS_Detection::set_params(){
 	params.p = 2;
 	params.r = 1;
-    
 	params.d = 0;   // field p^d 
-	params.k = 128;
+	params.k = 128; // could set to 256
 	params.slb = 800;
 	params.L = 20; // TODO - change params.L to equal a level just high enough to run calculations without error
 	
 	if ((params.L > 42) && (params.slb > 600)){
 		params.L *= 1.2;
 	}
-
 	params.c = 3;
 	params.w = 64;
 	
@@ -146,16 +143,62 @@ void QRS_Detection::initialize(){
 	mkt k_ones = he.setOnes(nslots);
 	he.set01(k_ones);
 
-  //  /*//TEMP! PUT BACK THE ABOVE WHEN RUNNING NON_FHE TESTS
+  //  /*//TEMP! USE WHEN RUNNING NON_FHE TESTS
   //   nslots = 1024; 
   //  */
   
-    // create nslots with the encrypted scaled diff_threshold; based on lowest diff_threshold in paper 
-    long scaled_diff_threshold = 3840 * lcm / (long)fs;
-    vector<long> v_diff_thresholds(nslots, scaled_diff_threshold);
-    encrypted_diff_threshold = he.encrypt(v_diff_thresholds);
+    // create nslots with the encrypted, scaled low diff_threshold value found in paper 
+    //long scaled_low_threshold = 3840 * lcm / (long)fs;
+    long scaled_low_threshold = 3840 / (long)fs;
+    long long sd = 3840 * lcm / (long long)fs;
+    vector<long> vector_low_thresholds(nslots, scaled_low_threshold);
+    vector< vector<long> > low_thresholds_bits = conv.longVec2Matrix(vector_low_thresholds);
+    unsigned bits_low = low_thresholds_bits.size();
 
-    // create nslots with the encrypted scaled min_threshold; based on min threshold given in paper
+    encrypted_low_threshold.resize(bits_low);
+    for (unsigned b = 0; b < bits_low; b++){
+        encrypted_low_threshold[b] = he.encrypt(low_thresholds_bits[b]);
+    }
+
+    // create nslots with the encrypted, scaled mid diff_threshold value found in paper TODO CHANGE vector<mkt>  
+    long scaled_mid_threshold = 4352 * lcm / (long)fs;
+    vector<long> vector_mid_thresholds(nslots, scaled_mid_threshold);
+    vector< vector<long> > mid_thresholds_bits = conv.longVec2Matrix(vector_mid_thresholds);
+    unsigned bits_mid = mid_thresholds_bits.size();
+
+    encrypted_mid_threshold.resize(bits_mid);
+    for (unsigned b = 0; b < bits_mid; b++){
+        encrypted_mid_threshold[b] = he.encrypt(mid_thresholds_bits[b]);
+    }
+
+    // create nslots with the encrypted, scaled high diff_threshold value found in paper 
+    //long scaled_high_threshold = 7680 * lcm / (long)fs;
+    long scaled_high_threshold = 7680 / (long)fs;
+    vector<long> vector_high_thresholds(nslots, scaled_high_threshold);
+    vector< vector<long> > high_thresholds_bits = conv.longVec2Matrix(vector_high_thresholds);
+    unsigned bits_high = high_thresholds_bits.size();
+
+    encrypted_high_threshold.resize(bits_high);
+    for (unsigned b = 0; b < bits_high; b++){
+        encrypted_high_threshold[b] = he.encrypt(high_thresholds_bits[b]);
+    }
+
+    // create nslots with the encrypted, scaled low S_ave value found in paper
+    long scaled_low_ave = 12800 * lcm / (long)fs;
+    vector<long> low_aves(nslots, scaled_low_ave);
+    mkt encrypted_low_ave = he.encrypt(low_aves);
+    // create nslots with the encrypted, scaled high S_ave value found in paper
+    long scaled_high_ave = 20480 * lcm / (long)fs;
+    vector<long> high_aves(nslots, scaled_high_ave);
+    mkt encrypted_high_ave = he.encrypt(high_aves);
+
+    // set encrypted_diff_threshold to the low_threshold value to start. will change later in update_thresholds()
+    encrypted_diff_threshold.resize(bits_low);
+    for (unsigned b = 0; b < bits_low; b++){
+        encrypted_diff_threshold[b] = he.copy(encrypted_low_threshold[b]);
+    }
+
+    // set encrypted_min_threshold to encrypted, scaled version of value found in paper. Doesn't change.
     long scaled_min_threshold = 1536 * lcm / (long)fs;
     vector<long> v_min_thresholds(nslots, scaled_min_threshold);
     encrypted_min_threshold = he.encrypt(v_min_thresholds);
@@ -178,7 +221,7 @@ void QRS_Detection::initialize(){
     for (long i = a; i <= b; i++){
         scaling_factors.push_back(lcm/i);
     }
-    
+
     // resize scaled sample vectors. _lcm = scaled by lcm, _lcm_xx = scaled by lcm / xx
     samples_lcm.resize(nslots,0);
     samples_lcm_10.resize(nslots,0);
@@ -296,7 +339,7 @@ void QRS_Detection::prepare_data(int iteration){
         bitset<64> b_lcm_21(samples_lcm_21[i]);
         bitset<64> b_lcm_22(samples_lcm_22[i]);
         bitset<64> b_lcm_23(samples_lcm_23[i]);
-        for (int b = 0; b < bits; b++){
+        for (unsigned b = 0; b < bits; b++){
             samples_lcm_bits[b][i] = b_lcm[b];
             samples_lcm_10_bits[b][i] = b_lcm_10[b];
             samples_lcm_11_bits[b][i] = b_lcm_11[b];
@@ -402,16 +445,16 @@ vector<mkt> QRS_Detection::update_thresholds(vector<mkt> diff_maxs){
             cout << "Diff_threshold changing! Old = " << tmp << ", New = " << diff_threshold << endl;
         }
     }*/
-    long scaled_high_ave = 20480 * lcm / (long)fs;
-    vector<long> high_aves(nslots, scaled_high_ave);
-    mkt encrypted_high_ave = he.encrypt(high_aves);
 
-    long scaled_low_ave = 12800 * lcm / (long)fs;
-    vector<long> low_aves(nslots, scaled_low_ave);
-    mkt encrypted_low_ave = he.encrypt(low_aves);
 
-    if (true){
-        encrypted_diff_threshold = encrypted_high_ave;
+    vector<long> tmp(nslots); 
+    tmp = conv.matrix2LongVec(he.decryptNbits(encrypted_diff_threshold));
+    cout << "tmp[0] = " << tmp[0] << endl;
+
+    unsigned bits_high = encrypted_high_threshold.size();
+    encrypted_diff_threshold.resize(bits_high);
+    for (unsigned b = 0; b < bits_high; b++){
+        encrypted_diff_threshold[b] = he.copy(encrypted_high_threshold[b]);
     }
 
     return results;
@@ -436,12 +479,6 @@ vector< vector<double> > QRS_Detection::compute_lr_slopes(int index){
 
         l_diff *= sample_difference_widths[i];
         r_diff *= sample_difference_widths[i];
-      /* 
-        cout << "samples[" << index-b << "]: " << samples[index-b] << endl;
-        cout << "samples[" << index-(b-a)+i << "]: " << samples[index-(b-a)+i] << endl; 
-        cout << "samples[" << index-(b+a)-i << "]: " << samples[index-(b+a)-i] << endl;  
-        cout << "l_diff, r_diff: " << l_diff << ", " << r_diff << endl;
-      */  
 
         lr_slopes[0][i] = l_diff;
         lr_slopes[1][i] = r_diff;
@@ -463,11 +500,6 @@ vector< vector<double> > QRS_Detection::compute_mins_maxs(vector< vector<double>
     result[0][1] = l_max;
     result[1][0] = r_min;
     result[1][1] = r_max;
-
-    if (debug){
-        cout << "l_min, l_max = " << l_min << ", " << l_max << endl;
-        cout << "r_min, r_max = " << r_min << ", " << r_max << endl;
-    }
 
     return result;
 }
@@ -664,7 +696,10 @@ void QRS_Detection::ds_plain(){
 
 /* Process sample file from beginning x = iterations number of times (1 iteration = nslots samples processed) unencrypted */ 
 void QRS_Detection::ds_plain(int index){
-    /*if ((index > 33777) && (index < 33825)){
+    /*
+       int start = 33777;
+       int end = 33825;
+       if ((index > start) && (index < end)){
         debug = true;
         cout << "WE'RE ON INDEX = " << index << ", ok? ==================, index - b = " << index - b << endl;
     } else {
@@ -713,15 +748,6 @@ void QRS_Detection::ds_plain(int index){
 
 
 
-
-
-
-
-
-
-
-
-
 /***************************************************************************/
 /******************************* Testing ***********************************/
 /***************************************************************************/
@@ -734,11 +760,11 @@ bool QRS_Detection::test_ds_fhe(int file_index){
 
     vector<mkt> throwaway;
     vector<mkt> resulting = update_thresholds(throwaway);
+
     // decrypt, check
-    vector<long> decrypted_diff_thresholds = he.decrypt(encrypted_diff_threshold);
-    for (int i = 0; i < nslots; i++){
-        cout << "decrypted_diff_thresholds[" << i << "] = " << decrypted_diff_thresholds[i] << endl; 
-    }
+    vector<long> decrypted_diff_thresholds(nslots); 
+    decrypted_diff_thresholds = conv.matrix2LongVec(he.decryptNbits(encrypted_diff_threshold));
+    cout << "decrypted_diff_thresholds[0]: " << decrypted_diff_thresholds[0] << endl;
 
     bool hasError = false;
 

@@ -101,8 +101,20 @@ class QRS_Detection {
 		long nslots;
 
 
+        // low threshold for encrypted_diff_threshold. hard coded so we don't have to recompute every update
+        vector<mkt> encrypted_low_threshold;
+        // mid threshold for encrypted_diff_threshold. hard coded so we don't have to recompute every update
+        vector<mkt> encrypted_mid_threshold;
+        // high threshold for encrypted_diff_threshold. hard coded so we don't have to recompute every update
+        vector<mkt> encrypted_high_threshold;
+
+        // low S_ave value for comparing against current S_ave to see if we need to update diff_threshold
+        mkt encrypted_low_ave;
+        // low S_ave value for comparing against current S_ave to see if we need to update diff_threshold
+        mkt encrypted_high_ave;
+
         // Theta_diff encrypted
-        mkt encrypted_diff_threshold;
+        vector<mkt> encrypted_diff_threshold;
         // Theta_min encrypted
         mkt encrypted_min_threshold;
 

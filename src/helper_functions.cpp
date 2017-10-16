@@ -4,7 +4,7 @@ string generate_string(int length){
 	const string alphanum = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 	//"0123456789!@#$%^&*ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
 	string s;
-	for(unsigned int i = 0; i < length; ++i){
+	for(int i = 0; i < length; ++i){
 		s += alphanum[rand() % (alphanum.size() - 1)];
 	}
 	return s;
@@ -51,7 +51,7 @@ vector<double> get_mV_samples(string filename, int channel, int num_header_lines
             cout << header[i] << endl;
         }
 
-        for (int i = 0; i < sample_numbers.size(); i++){
+        for (unsigned i = 0; i < sample_numbers.size(); i++){
             cout << sample_numbers[i] << "\t\t" << channel_1_values[i] << "\t" << channel_2_values[i] << endl;
         }   
     }   
@@ -106,7 +106,7 @@ vector<long> get_digital_samples(string filename, int channel, int num_header_li
             cout << header[i] << endl;
         }
 
-        for (int i = 0; i < sample_numbers.size(); i++){
+        for (unsigned i = 0; i < sample_numbers.size(); i++){
             cout << sample_numbers[i] << "\t\t" << channel_1_values[i] << "\t" << channel_2_values[i] << endl;
         }   
     }   
@@ -177,7 +177,7 @@ vector<int> get_annotations(string filename, bool debug){
     if (debug){
         cout << file_heading << endl;
 
-        for (int i = 0; i < sample_numbers.size(); i++){
+        for (unsigned i = 0; i < sample_numbers.size(); i++){
             cout << times[i] << "\t" << sample_numbers[i] << "\t" << types[i] << "\t" << subs[i] << "\t" << chans[i] << "\t" << nums[i] << "\t" << auxs[i] << endl;
         }   
     }   
@@ -188,7 +188,7 @@ vector<int> get_annotations(string filename, bool debug){
 vector<long> scale_samples(vector<double> samples, long scaling_factor){
     vector<long> scaled;
 
-    for (int i = 0; i < samples.size(); i++){
+    for (unsigned i = 0; i < samples.size(); i++){
         scaled.push_back((long)(scaling_factor*samples[i]));
     } 
 
@@ -221,7 +221,7 @@ void Errors::add(string name, bool error){
 
 void Errors::display(){
 	bool no_error = true;
-	for (int i = 0; i < errors.size(); i++){
+	for (unsigned i = 0; i < errors.size(); i++){
 		if (errors[i]){
 			no_error = false;
 			cout << title << ": Error occured for test " << names[i] << endl;
@@ -309,7 +309,7 @@ long Conversion::signedBitStr2Long(string bin_str){
 	if (str2Bool(substring)){ //2s complement MSB
 		int inv;
 		string bin_inv_str = "";
-		for (int i = 0; i < bin_str.length(); i++){
+		for (unsigned i = 0; i < bin_str.length(); i++){
 			substring = bin_str.substr(i,1);
 			inv = !str2Bool(substring);
 			bin_inv_str += bool2Str(inv);
@@ -397,9 +397,9 @@ vector< vector<long> > Conversion::longVec2Matrix(vector< long > v_in){
 	v_in_bits.resize(bits, vector<long>(nslots,0));
 	
 	
-	for(int j = 0; j < nslots; j++){
+	for(unsigned j = 0; j < nslots; j++){
 		bitset<64> bin(v_in[j]); //max is 2^64
-		for(int b = 0; b < bits; b++){
+		for(unsigned b = 0; b < bits; b++){
 			v_in_bits[b][j] = bin[b]; //first ctxt (bits = 0) is LSB
 		}
 	}
